@@ -6,11 +6,11 @@
 void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers) {
 
 
-    std::cout << " Starting an analysis " << std::endl;
+    //std::cout << " Starting an analysis " << std::endl;
 
-    const JetsProducer& jets = dynamic_cast<const JetsProducer&>(producers.get("jets"));
-    const ElectronsProducer& electrons = dynamic_cast<const ElectronsProducer&>(producers.get("electrons"));
-    const MuonsProducer& muons = dynamic_cast<const MuonsProducer&>(producers.get("muons"));
+    const JetsProducer& jets = producers.get<JetsProducer>("jets");
+    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
 
     BRANCH(bb, LorentzVector);
     BRANCH(ee, LorentzVector);

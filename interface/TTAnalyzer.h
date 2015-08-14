@@ -16,22 +16,16 @@ class TTAnalyzer: public Framework::Analyzer {
 
         virtual void analyze(const edm::Event&, const edm::EventSetup&, const ProducersManager&) override;
 
-/*
-        virtual void registerCategories(CategoryManager& manager) {
-            manager.new_category("mumu", "Category with leading leptons as two muons", &mumu_category);
-            manager.new_category("elel", "Category with leading leptons as two electrons", &elel_category);
-            manager.new_category("muel", "Category with leading leptons as muon, electron", &muel_category);
-            manager.new_category("elmu", "Category with leading leptons as electron, muon", &elmu_category);
 
+        virtual void registerCategories(CategoryManager& manager) {
+            manager.new_category<MuMuCategory>("mumu", "Category with leading leptons as two muons");
+            /*manager.new_category<ElElCategory>("elel", "Category with leading leptons as two electrons");
+            manager.new_category<MuElCategory>("muel", "Category with leading leptons as muon, electron");
+            manager.new_category<ElMuCategory>("elmu", "Category with leading leptons as electron, muon");*/
         }
-*/
+
     private:
-/*
-        MuMuCategory mumu_category;
-        ElElCategory elel_category;
-        MuElCategory muel_category;
-        ElMuCategory elmu_category;
-*/
+
 };
 
 #endif
