@@ -12,7 +12,6 @@ process = Framework.create(True, eras.Run2_50ns, '74X_dataRun2_v2', cms.PSet(
             mll_cut = cms.untracked.double(20)
             ),
         parameters = cms.PSet(
-            standalone = cms.untracked.bool(True),
             muons_wp = cms.untracked.string('loose'),
             electrons_wp = cms.untracked.string('loose')
             )
