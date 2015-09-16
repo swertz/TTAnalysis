@@ -35,7 +35,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     }
 
     // Find the highest-Pt opposite-charge pairs for each couple of flavours, on selected objets only
-    bool foundPair = false;
     selectedLeadingElEl = std::make_pair(-1, -1);
     selectedLeadingElMu = std::make_pair(-1, -1);
     selectedLeadingMuEl = std::make_pair(-1, -1);
@@ -46,53 +45,46 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
         for(unsigned int iele2 = iele1+1; iele2 < selectedElectrons.size(); iele2++){
             if( electrons.charge[ selectedElectrons[iele1] ] * electrons.charge[ selectedElectrons[iele2] ] < 0 ){
                 selectedLeadingElEl = std::make_pair(iele1, iele2);
-                foundPair = true;
                 break;
             }
         }
-        if(foundPair)
+        if(selectedLeadingElEl.first >= 0)
             break;
     }
 
     // El-Mu
-    foundPair = false;
     for(unsigned int iele = 0; iele < selectedElectrons.size(); iele++){
         for(unsigned int imu = 0; imu < selectedMuons.size(); imu++){
             if( electrons.p4[ selectedElectrons[iele] ].Pt() > muons.p4[ selectedMuons[imu] ].Pt() && electrons.charge[ selectedElectrons[iele] ] * muons.charge[ selectedMuons[imu] ] < 0 ){
                 selectedLeadingElMu = std::make_pair(iele, imu);
-                foundPair = true;
                 break;
             }
         }
-        if(foundPair)
+        if(selectedLeadingElMu.first >= 0)
             break;
     }
     
     // Mu-El
-    foundPair = false;
     for(unsigned int imu = 0; imu < selectedMuons.size(); imu++){
         for(unsigned int iele = 0; iele < selectedElectrons.size(); iele++){
             if( electrons.p4[ selectedElectrons[iele] ].Pt() < muons.p4[ selectedMuons[imu] ].Pt() && electrons.charge[ selectedElectrons[iele] ] * muons.charge[ selectedMuons[imu] ] < 0 ){
                 selectedLeadingMuEl = std::make_pair(imu, iele);
-                foundPair = true;
                 break;
             }
         }
-        if(foundPair)
+        if(selectedLeadingMuEl.first >= 0)
             break;
     }
 
     // Mu-Mu
-    foundPair = false;
     for(unsigned int imu1 = 0; imu1 < selectedMuons.size(); imu1++){
         for(unsigned int imu2 = imu1+1; imu2 < selectedMuons.size(); imu2++){
             if( muons.charge[ selectedMuons[imu1] ] * muons.charge[ selectedMuons[imu2] ] < 0 ){
                 selectedLeadingMuMu = std::make_pair(imu1, imu2);
-                foundPair = true;
                 break;
             }
         }
-        if(foundPair)
+        if(selectedLeadingMuMu.first >= 0)
             break;
     }
 

@@ -45,10 +45,10 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
         prefix = cms.string('tt_'),
         enable = cms.bool(True),
         parameters = cms.PSet(
-            electronIsoCut = cms.untracked.double(11),
+            electronIsoCut = cms.untracked.double(.11),
             electronPtCut = cms.untracked.double(20),
             electronEtaCut = cms.untracked.double(2.4),
-            muonIsoCut = cms.untracked.double(12),
+            muonIsoCut = cms.untracked.double(.12),
             muonPtCut = cms.untracked.double(20),
             muonEtaCut = cms.untracked.double(2.4),
             ),
