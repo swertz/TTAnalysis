@@ -1,5 +1,6 @@
 #include <cp3_llbb/TTAnalysis/interface/TTAnalyzer.h>
 #include <cp3_llbb/TTAnalysis/interface/NoZTTDileptonCategories.h>
+#include <cp3_llbb/TTAnalysis/interface/ZVetoTTDileptonCategories.h>
 #include <cp3_llbb/TTAnalysis/interface/TTDileptonCategories.h>
 
 #include <cp3_llbb/Framework/interface/MuonsProducer.h>
@@ -98,6 +99,8 @@ void TTAnalyzer::registerCategories(CategoryManager& manager, const edm::Paramet
   
   manager.new_category<NoZTTMuMuCategory>("noZmumu", "Category with leading leptons as two muons, excluding the Z peak", config);
   manager.new_category<NoZTTElElCategory>("noZelel", "Category with leading leptons as two electrons, excluding the Z peak", config);
+  
+  manager.new_category<ZVetoTTDileptonCategory>("ZvetoDilep", "Category with a veto on selected leptons being in the Z peak", config);
 }
 
 #include <FWCore/PluginManager/interface/PluginFactory.h>
