@@ -1,6 +1,6 @@
 #include <cp3_llbb/TTAnalysis/interface/TTAnalyzer.h>
 
-void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers) {
+void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const CategoryManager& categories) {
 
 }
 
