@@ -23,14 +23,20 @@ bool TTMuMuCategory::event_in_category_post_analyzers(const ProducersManager& pr
     if( selMu1 < 0 )
         return false;
 
-    if( muons.p4[selMu1].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElMu.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingElMu.first >= 0){
+        if( muons.p4[selMu1].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElMu.first ].Pt() )
+            return false;
+    }
 
-    if( muons.p4[selMu1].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingElEl.first >= 0){
+        if( muons.p4[selMu1].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.first ].Pt() )
+            return false;
+    }
 
-    if( muons.p4[selMu2].Pt() < electrons.p4[ tt_analyzer.selectedLeadingMuEl.second ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingMuEl.second >= 0){
+        if( muons.p4[selMu2].Pt() < electrons.p4[ tt_analyzer.selectedLeadingMuEl.second ].Pt() )
+            return false;
+    }
 
     return true;
 };
@@ -72,14 +78,20 @@ bool TTMuElCategory::event_in_category_post_analyzers(const ProducersManager& pr
     if( selMu < 0 )
         return false;
 
-    if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElMu.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingElMu.first >= 0){
+        if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElMu.first ].Pt() )
+            return false;
+    }
 
-    if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingElEl.first >= 0){
+        if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.first ].Pt() )
+            return false;
+    }
 
-    if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.second ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingMuMu.second >= 0){
+        if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.second ].Pt() )
+            return false;
+    }
 
     return true;
 };
@@ -104,14 +116,20 @@ bool TTElMuCategory::event_in_category_post_analyzers(const ProducersManager& pr
     if( selEl < 0 )
         return false;
 
-    if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuEl.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingMuEl.first >= 0){
+        if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuEl.first ].Pt() )
+            return false;
+    }
 
-    if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingMuMu.first >= 0){
+        if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.first ].Pt() )
+            return false;
+    }
 
-    if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.second ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingElEl.second >= 0){
+        if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.second ].Pt() )
+            return false;
+    }
 
     return true;
 };
@@ -135,14 +153,20 @@ bool TTElElCategory::event_in_category_post_analyzers(const ProducersManager& pr
     if( selEl1 < 0 )
         return false;
 
-    if( electrons.p4[selEl1].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuEl.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingMuEl.first >= 0){
+        if( electrons.p4[selEl1].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuEl.first ].Pt() )
+            return false;
+    }
 
-    if( electrons.p4[selEl1].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.first ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingMuMu.first >= 0){
+        if( electrons.p4[selEl1].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.first ].Pt() )
+            return false;
+    }
 
-    if( electrons.p4[selEl2].Pt() < muons.p4[ tt_analyzer.selectedLeadingElMu.second ].Pt() )
-        return false;
+    if( tt_analyzer.selectedLeadingElMu.second >= 0){
+        if( electrons.p4[selEl2].Pt() < muons.p4[ tt_analyzer.selectedLeadingElMu.second ].Pt() )
+            return false;
+    }
 
     return true;
 };
