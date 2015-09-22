@@ -4,6 +4,7 @@
 
 #include <cp3_llbb/Framework/interface/MuonsProducer.h>
 #include <cp3_llbb/Framework/interface/ElectronsProducer.h>
+#include <cp3_llbb/Framework/interface/JetsProducer.h>
 
 void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const CategoryManager& categories) {
 
@@ -11,27 +12,33 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
 
     for(unsigned int ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
+        if( electrons.ids[ielectron][m_electron_veto_wp_name] )
+            vetoElectrons.push_back(ielectron);
         if( electrons.ids[ielectron][m_electron_loose_wp_name] )
             looseElectrons.push_back(ielectron);
+        if( electrons.ids[ielectron][m_electron_medium_wp_name] )
+            mediumElectrons.push_back(ielectron);
         if( electrons.ids[ielectron][m_electron_tight_wp_name] )
             tightElectrons.push_back(ielectron);
         if( electrons.relativeIsoR03_withEA[ielectron] < m_electronIsoCut )
             isolatedElectrons.push_back(ielectron);
 
-        if( electrons.ids[ielectron][m_electron_tight_wp_name] && electrons.relativeIsoR03_withEA[ielectron] < m_electronIsoCut && electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut )
-          selectedElectrons.push_back(ielectron);
+        if( electrons.ids[ielectron][m_electron_selectedID_name] && electrons.relativeIsoR03_withEA[ielectron] < m_electronIsoCut && electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut )
+            selectedElectrons.push_back(ielectron);
     }
 
     for(unsigned int imuon = 0; imuon < muons.p4.size(); imuon++){
         if( muons.isLoose[imuon] )
             looseMuons.push_back(imuon);
+        if( muons.isMedium[imuon] )
+            mediumMuons.push_back(imuon);
         if( muons.isTight[imuon] )
             tightMuons.push_back(imuon);
         if( muons.relativeIsoR04_withEA[imuon] < m_muonIsoCut )
             isolatedMuons.push_back(imuon);
 
-        if( muons.isTight[imuon] && muons.relativeIsoR04_withEA[imuon] < m_muonIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut )
-          selectedMuons.push_back(imuon);
+        if(muonIDAccessor(muons, imuon, m_muon_selectedID_wp) && muons.relativeIsoR04_withEA[imuon] < m_muonIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut )
+            selectedMuons.push_back(imuon);
     }
 
     // Find the highest-Pt opposite-charge pairs for each couple of flavours, on selected objets only
@@ -88,6 +95,14 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
             break;
     }
 
+    // Save the jets that pass the cuts
+
+    const JetsProducer& jets = producers.get<JetsProducer>("jets");
+
+    for(unsigned int ijet = 0; ijet < jets.p4.size(); ijet++){
+        if( abs(jets.p4[ijet].Eta()) < m_jetEtaCut && jets.p4[ijet].Pt() > m_jetPtCut)
+            selectedJets.push_back(ijet);
+    }
 }
 
 void TTAnalyzer::registerCategories(CategoryManager& manager, const edm::ParameterSet& config) {

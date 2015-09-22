@@ -6,8 +6,8 @@
 class NoZTTDileptonCategory {
     public:
         virtual void configure(const edm::ParameterSet& conf) {
-            m_mll_cut_low = conf.getUntrackedParameter<double>("mll_cut_low", 86);
-            m_mll_cut_high = conf.getUntrackedParameter<double>("mll_cut_high", 116);
+            m_mll_cut_low = conf.getUntrackedParameter<double>("mll_ZVetoCut_low", 86);
+            m_mll_cut_high = conf.getUntrackedParameter<double>("mll_ZVetoCut_high", 116);
         }
 
     protected:
