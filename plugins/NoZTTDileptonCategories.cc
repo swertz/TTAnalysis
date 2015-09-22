@@ -59,7 +59,7 @@ void NoZTTElElCategory::evaluate_cuts_post_analyzers(CutManager& manager, const 
 
     if( selEl1 >= 0 ){
         if( (electrons.p4[selEl1] + electrons.p4[selEl2]).M() < m_mll_cut_low || (electrons.p4[selEl1] + electrons.p4[selEl2]).M() > m_mll_cut_high )
-            manager.pass_cut("ll_massi_noZ");
+            manager.pass_cut("ll_mass_noZ");
     }
 }
 

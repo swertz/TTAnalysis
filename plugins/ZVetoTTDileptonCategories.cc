@@ -9,13 +9,13 @@
 // ***** ***** *****
 
 bool ZVetoTTDileptonCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const { return true; }
-bool ZVetoTTDileptonCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const { return true; }
 
-void ZVetoTTDileptonCategory::register_cuts(CutManager& manager) {
-    manager.new_cut("ll_mass_Zveto", "116 > mll > 86");
-}
+//void ZVetoTTDileptonCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+//void ZVetoTTDileptonCategory::register_cuts(CutManager& manager) {
+//    manager.new_cut("ll_mass_Zveto", "116 > mll > 86");
+//}
 
-void ZVetoTTDileptonCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+bool ZVetoTTDileptonCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
     const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
     const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
     const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
@@ -26,7 +26,7 @@ void ZVetoTTDileptonCategory::evaluate_cuts_post_analyzers(CutManager& manager, 
             if( electrons.charge[ tt.selectedElectrons[iele1] ] * electrons.charge[ tt.selectedElectrons[iele2] ] < 0 ){
                 LorentzVector dilep = electrons.p4[ tt.selectedElectrons[iele1] ] + electrons.p4[ tt.selectedElectrons[iele2] ];
                 if( dilep.M() > m_mll_cut_low && dilep.M() < m_mll_cut_high)
-                    return;
+                    return false;
             }
         }
     }
@@ -37,12 +37,11 @@ void ZVetoTTDileptonCategory::evaluate_cuts_post_analyzers(CutManager& manager, 
             if( muons.charge[ tt.selectedMuons[imu1] ] * muons.charge[ tt.selectedMuons[imu2] ] < 0 ){
                 LorentzVector dilep = muons.p4[ tt.selectedMuons[imu1] ] + muons.p4[ tt.selectedMuons[imu2] ];
                 if( dilep.M() > m_mll_cut_low && dilep.M() < m_mll_cut_high)
-                    return;
+                    return false;
             }
         }
     }
 
-    manager.pass_cut("ll_mass_Zveto");
-
+    return true;
 }
 
