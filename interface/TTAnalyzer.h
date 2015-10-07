@@ -2,42 +2,66 @@
 #define TTANALYZER_H
 
 #include <cp3_llbb/Framework/interface/MuonsProducer.h>
+#include <cp3_llbb/Framework/interface/JetsProducer.h>
 #include <cp3_llbb/Framework/interface/Analyzer.h>
 
+#define myLorentzVector ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float>>
+
+template <typename T1, typename T2>
+struct ResetterT<std::map<T1, T2>>: Resetter {
+    public:
+        ResetterT(std::map<T1, T2>& data)
+            : m_data(data) {
+            }
+
+        virtual void reset() {
+            m_data.clear();
+        }
+
+    private:
+        std::map<T1, T2>& m_data;
+};
+
+float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2){
+  return abs(v1.Eta() - v2.Eta());
+}
+
+class jetBTagDiscriminantSorter {
+  
+  public:
+
+    jetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName): m_jetsProducer(jets), m_taggerName(taggerName) {}
+    bool operator()(uint8_t idxJet1, uint8_t idxJet2){
+      return m_jetsProducer.getBTagDiscriminant(idxJet1, m_taggerName) > m_jetsProducer.getBTagDiscriminant(idxJet2, m_taggerName);
+    }
+
+  private:
+
+    const JetsProducer& m_jetsProducer;
+    const std::string m_taggerName;
+};
+
 struct Lepton {
-  LorentzVector p4;
+  myLorentzVector p4;
   uint8_t idx; // stores index to electron/muon arrays
   bool isMu;
   bool isEl;
-}
+};
 
 struct DiLepton {
-  LorentzVector p4;
+  myLorentzVector p4;
   std::pair<int, int> idxs; // stores indices to electron/muon arrays
   std::pair<int, int> lidxs; // stores indices to Lepton array
   bool isElEl;
   bool isElMu;
   bool isMuEl;
   bool isMuMu;
-}
+};
 
 struct DiJet {
-  LorentzVector p4;
+  myLorentzVector p4;
   std::pair<int, int> idxs;
-}
-
-/*float DeltaPhi(const LorentzVector &v1, const LorentzVector &v2){
-  float dPhi = abs(v1.Phi() - v2.Phi());
-  return (dPhi <= TMath::Pi()) ? dPhi : dPhi - TMath::Pi();
-}
-
-float DeltaEta(const LorentzVector &v1, const LorentzVector &v2){
-  return abs(v1.Eta() - v2.Eta());
-}
-
-float DeltaR(const LorentzVector &v1, const LorentzVector &v2){
-  return sqrt(pow(DeltaEta(v1, v2), 2) + pow(DeltaPhi(v1, v2), 2));
-}*/
+};
 
 class TTAnalyzer: public Framework::Analyzer {
     public:
@@ -61,7 +85,7 @@ class TTAnalyzer: public Framework::Analyzer {
             m_MllBaseCutSF( config.getUntrackedParameter<double>("MllBaseCutSF", 0.) ),
             m_MllBaseCutDF( config.getUntrackedParameter<double>("MllBaseCutDF", 0.) ),
             
-            m_jetPtCut( config.getUntrackedParameter<double>("jetPtCut", 30) )
+            m_jetPtCut( config.getUntrackedParameter<double>("jetPtCut", 30) ),
             m_jetEtaCut( config.getUntrackedParameter<double>("jetEtaCut", 2.5) ),
             m_jetPUID( config.getUntrackedParameter<double>("jetPUID", -1000) ),
             m_jetDRleptonCut( config.getUntrackedParameter<double>("jetDRleptonCut", 0.3) ),
@@ -70,10 +94,9 @@ class TTAnalyzer: public Framework::Analyzer {
             m_jetCSVv2L( config.getUntrackedParameter<double>("jetCSVv2L", 0.605) ),
             m_jetCSVv2M( config.getUntrackedParameter<double>("jetCSVv2M", 0.89) ),
             m_jetCSVv2T( config.getUntrackedParameter<double>("jetCSVv2T", 0.97) ),
-            m_jetBtagCSVv2WPs( config.getUntrackedParameter<std::vector<std::string>>("jetBtagCSVv2WPs", { "LL", "MM", "TT" } ) ),
             
-            m_hltEtaCut( config.getUntrackedParameter<double>("hltEtaCut", 100) ),
-            m_hltPtCut( config.getUntrackedParameter<double>("hltPtCut", 999999) ),
+            m_hltDRCut( config.getUntrackedParameter<double>("hltDrCut", 100) ),
+            m_hltPtCut( config.getUntrackedParameter<double>("hltPtCut", 999999) )
         {
         }
 
@@ -96,12 +119,12 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(leadingSelectedElMu, std::pair<int, int>);
         BRANCH(leadingSelectedElEl, std::pair<int, int>);
 
-        BRANCH(lepton_p4, std::vector<LorentzVector>);
+        BRANCH(lepton_p4, std::vector<myLorentzVector>);
         BRANCH(lepton_idx, std::vector<uint8_t>); // index points to electrons/muons arrays
         BRANCH(lepton_isMu, std::vector<bool>);
         BRANCH(lepton_isEl, std::vector<bool>);
         
-        BRANCH(diLepton_p4, LorentzVector);
+        BRANCH(diLepton_p4, myLorentzVector);
         BRANCH(diLepton_idxs, std::pair<int, int>); // index points to electrons/muons arrays
         BRANCH(diLepton_lidxs, std::pair<int, int>); // index points to lepton array
         BRANCH(diLepton_isMuMu, bool);
@@ -123,7 +146,7 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(selectedNonBJets_CSVv2M, std::vector<uint8_t>);
         BRANCH(selectedNonBJets_CSVv2T, std::vector<uint8_t>);
 
-        BRANCH(diJet_p4, LorentzVector);
+        BRANCH(diJet_p4, myLorentzVector);
         BRANCH(diJet_idxs, std::pair<int, int>); // indices point to jets array
         BRANCH(diJet_DR, float);
         BRANCH(diJet_DPhi, float);
@@ -132,44 +155,42 @@ class TTAnalyzer: public Framework::Analyzer {
         // For b-jet, the string index corresponds to "WPs-ORDER" where WPs is "LL", "MM" or "TT",
         // and ORDER is "Pt" for Pt-ordered b-jet choice and "CSVv2" for CSVv2-ordered b-jet choice.
         
-        BRANCH(diBJet_p4, std::map<std::string, LorentzVector>);
+        BRANCH(diBJet_p4, std::map<std::string, myLorentzVector>);
         BRANCH(diBJet_idxs, std::map<std::string, std::pair<int, int>>); // indices point to jets array
         BRANCH(diBJet_DR, std::map<std::string, float>);
         BRANCH(diBJet_DPhi, std::map<std::string, float>);
         BRANCH(diBJet_DEta, std::map<std::string, float>);
 
-        BRANCH(ll_jj_p4, LorentzVector);
+        BRANCH(ll_jj_p4, myLorentzVector);
         BRANCH(ll_jj_DR, float);
         BRANCH(ll_jj_DPhi, float);
         BRANCH(ll_jj_DEta, float);
         BRANCH(lj_minDR, float);
         BRANCH(lj_noDRcut_minDR, float);
 
-        BRANCH(ll_bb_p4, std::map<std::string, LorentzVector>);
+        BRANCH(ll_bb_p4, std::map<std::string, myLorentzVector>);
         BRANCH(ll_bb_DR, std::map<std::string, float>);
         BRANCH(ll_bb_DPhi, std::map<std::string, float>);
         BRANCH(ll_bb_DEta, std::map<std::string, float>);
         BRANCH(lb_minDR, std::map<std::string, float>);
 
-        BRANCH(ll_jj_pfMET_p4, LorentzVector);
-        BRANCH(ll_pfMET_DPhi, LorentzVector);
-        BRANCH(jj_pfMET_DPhi, LorentzVector);
-        BRANCH(ll_jj_pfMET_DPhi, LorentzVector);
+        BRANCH(ll_jj_pfMET_p4, myLorentzVector);
+        BRANCH(ll_pfMET_DPhi, float);
+        BRANCH(jj_pfMET_DPhi, float);
+        BRANCH(ll_jj_pfMET_DPhi, float);
         
-        BRANCH(ll_jj_noHFMET_p4, LorentzVector);
-        BRANCH(ll_noHFMET_DPhi, LorentzVector);
-        BRANCH(jj_noHFMET_DPhi, LorentzVector);
-        BRANCH(ll_jj_noHFMET_DPhi, LorentzVector);
+        BRANCH(ll_jj_noHFMET_p4, myLorentzVector);
+        BRANCH(ll_noHFMET_DPhi, float);
+        BRANCH(jj_noHFMET_DPhi, float);
+        BRANCH(ll_jj_noHFMET_DPhi, float);
         
-        BRANCH(ll_bb_pfMET_p4, std::map<std::string, LorentzVector>);
-        BRANCH(ll_pfMET_DPhi, std::map<std::string, LorentzVector>);
-        BRANCH(bb_pfMET_DPhi, std::map<std::string, LorentzVector>);
-        BRANCH(ll_bb_pfMET_DPhi, std::map<std::string, LorentzVector>);
+        BRANCH(ll_bb_pfMET_p4, std::map<std::string, myLorentzVector>);
+        BRANCH(bb_pfMET_DPhi, std::map<std::string, float>);
+        BRANCH(ll_bb_pfMET_DPhi, std::map<std::string, float>);
         
-        BRANCH(ll_bb_noHFMET_p4, std::map<std::string, LorentzVector>);
-        BRANCH(ll_noHFMET_DPhi, std::map<std::string, LorentzVector>);
-        BRANCH(bb_noHFMET_DPhi, std::map<std::string, LorentzVector>);
-        BRANCH(ll_bb_noHFMET_DPhi, std::map<std::string, LorentzVector>);
+        BRANCH(ll_bb_noHFMET_p4, std::map<std::string, myLorentzVector>);
+        BRANCH(bb_noHFMET_DPhi, std::map<std::string, float>);
+        BRANCH(ll_bb_noHFMET_DPhi, std::map<std::string, float>);
 
     private:
 
@@ -188,9 +209,8 @@ class TTAnalyzer: public Framework::Analyzer {
         const float m_jetPtCut, m_jetEtaCut, m_jetPUID, m_jetDRleptonCut;
         const std::string m_jetID, m_jetCSVv2Name;
         const float m_jetCSVv2L, m_jetCSVv2M, m_jetCSVv2T;
-        const std::vector<std::string> m_jetBtagCSVv2WPs;
 
-        const float m_hltEtaCut, m_hltPtCut;
+        const float m_hltDRCut, m_hltPtCut;
 
         std::vector<Lepton> m_leptons;
         DiLepton m_diLepton;
