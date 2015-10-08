@@ -1,67 +1,15 @@
-#ifndef TTANALYZER_H
-#define TTANALYZER_H
+#pragma once
+
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <cp3_llbb/Framework/interface/MuonsProducer.h>
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
 #include <cp3_llbb/Framework/interface/Analyzer.h>
 
-#define myLorentzVector ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float>>
-
-template <typename T1, typename T2>
-struct ResetterT<std::map<T1, T2>>: Resetter {
-    public:
-        ResetterT(std::map<T1, T2>& data)
-            : m_data(data) {
-            }
-
-        virtual void reset() {
-            m_data.clear();
-        }
-
-    private:
-        std::map<T1, T2>& m_data;
-};
-
-float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2){
-  return abs(v1.Eta() - v2.Eta());
-}
-
-class jetBTagDiscriminantSorter {
-  
-  public:
-
-    jetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName): m_jetsProducer(jets), m_taggerName(taggerName) {}
-    bool operator()(uint8_t idxJet1, uint8_t idxJet2){
-      return m_jetsProducer.getBTagDiscriminant(idxJet1, m_taggerName) > m_jetsProducer.getBTagDiscriminant(idxJet2, m_taggerName);
-    }
-
-  private:
-
-    const JetsProducer& m_jetsProducer;
-    const std::string m_taggerName;
-};
-
-struct Lepton {
-  myLorentzVector p4;
-  uint8_t idx; // stores index to electron/muon arrays
-  bool isMu;
-  bool isEl;
-};
-
-struct DiLepton {
-  myLorentzVector p4;
-  std::pair<int, int> idxs; // stores indices to electron/muon arrays
-  std::pair<int, int> lidxs; // stores indices to Lepton array
-  bool isElEl;
-  bool isElMu;
-  bool isMuEl;
-  bool isMuMu;
-};
-
-struct DiJet {
-  myLorentzVector p4;
-  std::pair<int, int> idxs;
-};
+#include <cp3_llbb/TTAnalysis/interface/Types.h>
+#include <cp3_llbb/TTAnalysis/interface/Tools.h>
 
 class TTAnalyzer: public Framework::Analyzer {
     public:
@@ -212,10 +160,10 @@ class TTAnalyzer: public Framework::Analyzer {
 
         const float m_hltDRCut, m_hltPtCut;
 
-        std::vector<Lepton> m_leptons;
-        DiLepton m_diLepton;
-        DiJet m_diJet;
-        std::map<std::string, DiJet> m_diBJet_PtChosen, m_diBJet_CSVv2Chosen;
+        std::vector<TTAnalysis::Lepton> m_leptons;
+        TTAnalysis::DiLepton m_diLepton;
+        TTAnalysis::DiJet m_diJet;
+        std::map<std::string, TTAnalysis::DiJet> m_diBJet_PtChosen, m_diBJet_CSVv2Chosen;
         
         static inline bool muonIDAccessor(const MuonsProducer& muons, const uint8_t index, const std::string& muonID){
             if(index >= muons.p4.size())
@@ -250,4 +198,3 @@ class TTAnalyzer: public Framework::Analyzer {
         }
 };
 
-#endif

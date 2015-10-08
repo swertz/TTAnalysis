@@ -1,3 +1,5 @@
+#include <cp3_llbb/TTAnalysis/interface/Types.h>
+#include <cp3_llbb/TTAnalysis/interface/Tools.h>
 #include <cp3_llbb/TTAnalysis/interface/TTAnalyzer.h>
 #include <cp3_llbb/TTAnalysis/interface/NoZTTDileptonCategories.h>
 #include <cp3_llbb/TTAnalysis/interface/TTDileptonCategories.h>
@@ -7,7 +9,10 @@
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
 #include <cp3_llbb/Framework/interface/METProducer.h>
 
+// To access VectorUtil::DeltaR() more easily
 using namespace ROOT::Math;
+
+using namespace TTAnalysis;
 
 void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const CategoryManager& categories) {
 
@@ -18,19 +23,21 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
 
     for(uint8_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
-        if( electrons.ids[ielectron][m_electronVetoIDName] && electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut )
+      if( electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
+        if( electrons.ids[ielectron][m_electronVetoIDName] )
             vetoElectrons.push_back(ielectron);
-        if( electrons.ids[ielectron][m_electronLooseIDName] && electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut )
+        if( electrons.ids[ielectron][m_electronLooseIDName] )
             looseElectrons.push_back(ielectron);
-        if( electrons.ids[ielectron][m_electronMediumIDName] && electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut )
+        if( electrons.ids[ielectron][m_electronMediumIDName] )
             mediumElectrons.push_back(ielectron);
-        if( electrons.ids[ielectron][m_electronTightIDName] && electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut )
+        if( electrons.ids[ielectron][m_electronTightIDName] )
             tightElectrons.push_back(ielectron);
 
-        if( electrons.ids[ielectron][m_electronSelectedIDName] && electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
+        if( electrons.ids[ielectron][m_electronSelectedIDName] ){
             selectedElectrons.push_back(ielectron);
             m_leptons.push_back( { electrons.p4[ielectron], ielectron, true, false } );
         }
+      }
     }
 
     ///////////////////////////
@@ -40,17 +47,19 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
 
     for(uint8_t imuon = 0; imuon < muons.p4.size(); imuon++){
-        if(muons.relativeIsoR04_withEA[imuon] < m_muonBaseIsoCut &&  muons.isLoose[imuon] && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut )
+      if(muons.relativeIsoR04_withEA[imuon] < m_muonBaseIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
+        if( muons.isLoose[imuon] )
             looseMuons.push_back(imuon);
-        if(muons.relativeIsoR04_withEA[imuon] < m_muonBaseIsoCut &&  muons.isMedium[imuon] && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut )
+        if( muons.isMedium[imuon] )
             mediumMuons.push_back(imuon);
-        if(muons.relativeIsoR04_withEA[imuon] < m_muonBaseIsoCut &&  muons.isTight[imuon] && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut )
+        if( muons.isTight[imuon] )
             tightMuons.push_back(imuon);
+      }
 
-        if(muonIDAccessor(muons, imuon, m_muonSelectedID) && muons.relativeIsoR04_withEA[imuon] < m_muonSelectedIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
-            selectedMuons.push_back(imuon);
-            m_leptons.push_back( { muons.p4[imuon], imuon, false, true } );
-        }
+      if(muonIDAccessor(muons, imuon, m_muonSelectedID) && muons.relativeIsoR04_withEA[imuon] < m_muonSelectedIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
+          selectedMuons.push_back(imuon);
+          m_leptons.push_back( { muons.p4[imuon], imuon, false, true } );
+      }
     }
 
     // Sort the m_leptons vector according to Pt and write the content to disk
