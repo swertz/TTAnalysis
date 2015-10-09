@@ -5,7 +5,7 @@
 
 namespace TTAnalysis {
 
-  float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2){
+  inline float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2){
     return abs(v1.Eta() - v2.Eta());
   }
   

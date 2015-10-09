@@ -24,19 +24,31 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
     for(uint8_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
       if( electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
-        if( electrons.ids[ielectron][m_electronVetoIDName] )
-            vetoElectrons.push_back(ielectron);
-        if( electrons.ids[ielectron][m_electronLooseIDName] )
-            looseElectrons.push_back(ielectron);
-        if( electrons.ids[ielectron][m_electronMediumIDName] )
-            mediumElectrons.push_back(ielectron);
-        if( electrons.ids[ielectron][m_electronTightIDName] )
-            tightElectrons.push_back(ielectron);
+        Lepton m_lepton(electron.p4[ielectron], ielectron, electron.charge[ielectron], true, false);
+        
+        if( electrons.ids[ielectron][m_electronVetoIDName] ){
+          vetoElectrons.push_back(ielectron);
+          m_lepton.lID["veto"] = true;
+        }
+        if( electrons.ids[ielectron][m_electronLooseIDName] ){
+          looseElectrons.push_back(ielectron);
+          m_lepton.lID["loose"] = true;
+        }
+        if( electrons.ids[ielectron][m_electronMediumIDName] ){
+          mediumElectrons.push_back(ielectron);
+          m_lepton.lID["medium"] = true;
+        }
+        if( electrons.ids[ielectron][m_electronTightIDName] ){
+          tightElectrons.push_back(ielectron);
+          m_lepton.lID["tight"] = true;
+        }
 
-        if( electrons.ids[ielectron][m_electronSelectedIDName] ){
+        lepton.push_back(m_lepton);
+
+        /*if( electrons.ids[ielectron][m_electronSelectedIDName] ){
             selectedElectrons.push_back(ielectron);
             m_leptons.push_back( { electrons.p4[ielectron], ielectron, true, false } );
-        }
+        }*/
       }
     }
 
@@ -48,37 +60,71 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
     for(uint8_t imuon = 0; imuon < muons.p4.size(); imuon++){
       if(muons.relativeIsoR04_withEA[imuon] < m_muonBaseIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
-        if( muons.isLoose[imuon] )
-            looseMuons.push_back(imuon);
-        if( muons.isMedium[imuon] )
-            mediumMuons.push_back(imuon);
-        if( muons.isTight[imuon] )
-            tightMuons.push_back(imuon);
+        Lepton m_lepton(muon.p4[imuon], imuon, muon.charge[imuon], false, true);
+
+        if( muons.isLoose[imuon] ){
+          looseMuons.push_back(imuon);
+          m_lepton.lID["loose"] = true;
+        }
+        if( muons.isMedium[imuon] ){
+          mediumMuons.push_back(imuon);
+          m_lepton.lID["medium"] = true;
+        }
+        if( muons.isTight[imuon] ){
+          tightMuons.push_back(imuon);
+          m_lepton.lID["tight"] = true;
+        }
+
+        leptons.push_back(m_lepton);
       }
 
-      if(muonIDAccessor(muons, imuon, m_muonSelectedID) && muons.relativeIsoR04_withEA[imuon] < m_muonSelectedIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
+      /*if(muonIDAccessor(muons, imuon, m_muonSelectedID) && muons.relativeIsoR04_withEA[imuon] < m_muonSelectedIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
           selectedMuons.push_back(imuon);
           m_leptons.push_back( { muons.p4[imuon], imuon, false, true } );
-      }
+      }*/
     }
 
-    // Sort the m_leptons vector according to Pt and write the content to disk
-    std::sort(m_leptons.begin(), m_leptons.end(), [](Lepton a, Lepton b){ return b.p4.Pt() > a.p4.Pt(); });
-    for(const Lepton& lepton: m_leptons){
+    // Sort the leptons vector according to Pt
+    std::sort(leptons.begin(), leptons.end(), [](const Lepton& a, const Lepton &b){ return b.p4.Pt() > a.p4.Pt(); });
+    /*for(const Lepton& lepton: m_leptons){
       lepton_p4.push_back(lepton.p4);
       lepton_idx.push_back(lepton.idx);
       lepton_isMu.push_back(lepton.isMu);
       lepton_isEl.push_back(lepton.isEl);
-    }
+    }*/
 
     ///////////////////////////
     //       DILEPTONS       //
     ///////////////////////////
 
+    for(uint8_t i1 = 0; i1 < leptons.size(); i1++){
+      for(uint8_t i2 = i1 + 1; i2 < leptons.size(); i2++){
+        const Lepton& l1 = leptons[i1];
+        const Lepton& l2 = leptons[i2];
+
+        diLeptons.push_back( diLepton(
+            l1.p4 + l2.p4, 
+            std::make_pair(l1.idx, l2.idx), 
+            std::make_pair(i1, i2), 
+            l1.isEl && l2.isEl,
+            l1.isEl && l2.isMu,
+            l1.isMu && l2.isEl,
+            l1.isMu && l2.isMu,
+            l1.charge != l2.charge,
+            (l1.isEl && l2.isEl) || (l1.isMu && l2.isMu),
+            VectorUtil::DeltaR(l1.p4, l2.p4),
+            TTAnalysis::DeltaEta(l1.p4, l2.p4),
+            VectorUtil::DeltaPhi(l1.p4, l2.p4)
+            ) );
+      }
+    }
+    
+    
+
     // First find the highest-Pt opposite-charge pairs for each couple of flavours, on selected objets only
     // Already apply a cut on Mll
     
-    leadingSelectedElEl = std::make_pair(-1, -1);
+    /*leadingSelectedElEl = std::make_pair(-1, -1);
     leadingSelectedElMu = std::make_pair(-1, -1);
     leadingSelectedMuEl = std::make_pair(-1, -1);
     leadingSelectedMuMu = std::make_pair(-1, -1);
@@ -185,7 +231,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       diLepton_DR = VectorUtil::DeltaR( lepton_p4[ m_diLepton.lidxs.first ], lepton_p4[ m_diLepton.lidxs.second ] );
       diLepton_DPhi = VectorUtil::DeltaPhi( lepton_p4[ m_diLepton.lidxs.first ], lepton_p4[ m_diLepton.lidxs.second ] );
       diLepton_DEta = DeltaEta( lepton_p4[ m_diLepton.lidxs.first ], lepton_p4[ m_diLepton.lidxs.second ] );
-    }
+    }*/
 
     ///////////////////////////
     //       JETS            //

@@ -26,26 +26,44 @@ namespace TTAnalysis{
   };
 
   struct Lepton: BaseObject {
-    Lepton(myLorentzVector p4, uint8_t idx, bool isMu, bool isEl):
-      BaseObject(p4), idx(idx), isMu(isMu), isEl(isEl)
-      {}
+    Lepton(myLorentzVector p4, uint8_t idx, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false):
+      BaseObject(p4), idx(idx), charge(charge), isEl(isEl), isMu(isMu)
+      {
+        lID["loose"] = isLoose;
+        lID["medium"] = isMedium;
+        lID["tight"] = isTight;
+        if(isEl)
+          lID["veto"] = isVeto;
+      }
     Lepton() {}
     
     uint8_t idx; // stores index to electron/muon arrays
-    bool isMu;
+    uint8_t charge;
     bool isEl;
+    bool isMu;
+    std::map<std::string, bool> lID; // lepton IDs
+    /*bool isLoose;
+    bool isMedium;
+    bool isTight;
+    bool isVeto;*/
 
     virtual void clear(){
       BaseObject::clear();
-      idx = 0;
-      isMu = false;
+      idx = -1;
+      charge = 0;
       isEl = false;
+      isMu = false;
+      lID.clear();
+      /*isVeto = false;
+      isLoose = false;
+      isMedium = false;
+      isTight = false;*/
     }
   };
   
   struct DiLepton: BaseObject {
-    DiLepton(myLorentzVector p4, std::pair<int, int> idxs, std::pair<int, int> lidxs, bool isElEl, bool isElMu, bool isMuEl, bool isMuMu):
-      BaseObject(p4), idxs(idxs), lidxs(lidxs), isElEl(isElEl), isElMu(isElMu), isMuEl(isMuEl), isMuMu(isMuMu)
+    DiLepton(myLorentzVector p4, std::pair<int, int> idxs, std::pair<int, int> lidxs, bool isElEl, bool isElMu, bool isMuEl, bool isMuMu, bool isOS, bool isSF, float DR, float DEta, float DPhi):
+      BaseObject(p4), idxs(idxs), lidxs(lidxs), isElEl(isElEl), isElMu(isElMu), isMuEl(isMuEl), isMuMu(isMuMu), isOS(isOS), isSF(isSF), DR(DR), DEta(DEta), DPhi(DPhi)
       {}
     DiLepton() {}
     
@@ -55,6 +73,11 @@ namespace TTAnalysis{
     bool isElMu;
     bool isMuEl;
     bool isMuMu;
+    bool isOS; // opposite sign
+    bool isSF; // same flavour
+    float DR;
+    float DEta;
+    float DPhi;
     
     virtual void clear(){
       BaseObject::clear();
@@ -66,6 +89,11 @@ namespace TTAnalysis{
       isElMu = false;
       isMuEl = false;
       isMuMu = false;
+      isOS = false;
+      isSF = false;
+      DR = -1;
+      DEta = -1;
+      DPhi = -1;
     }
   };
   
@@ -75,7 +103,11 @@ namespace TTAnalysis{
       {}
     DiJet() {}
     
-    std::pair<int, int> idxs;
+    std::pair<int, int> idxs; // stores indices to jets array
+    std::pair<int, int> jidxs; // stores indices to TTAnalysis::Jet array
+    float DR;
+    float DEta;
+    float DPhi;
     
     virtual void clear(){
       BaseObject::clear();
