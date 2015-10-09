@@ -212,9 +212,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           if(passDRcut)
             selectedJets_tightID_DRcut.push_back(ijet);
         
-        }
-      }
-    }
+        } // end selected + tightID
+      } // end selected
+    } // end for
 
     if(selectedJets_tightID_DRcut.size() >= 2){
       int jet1 = selectedJets_tightID_DRcut[0];
@@ -250,20 +250,19 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           
           if(csvv2 >= m_jetCSVv2T){
             selectedBJets_CSVv2T.push_back(ijet);
-          
           }else{
             selectedNonBJets_CSVv2T.push_back(ijet);
-          }
+          } // end Tight
         
         }else{
           selectedNonBJets_CSVv2M.push_back(ijet);
-        }
+        } // end Medium
       
       }else{
         selectedNonBJets_CSVv2L.push_back(ijet);
-      }
+      } // end Loose
     
-    }
+    } // end for
 
     // Choose pairs of L b-jets, from Pt- or CSVv2-ordered selected jets
 
@@ -402,15 +401,12 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
         lb_minDR[wp+order] = 10;
         if(m_diLepton.idxs.first >= 0){
-          float dr1 = std::min(
+          float dr = std::min( {
               VectorUtil::DeltaR(m_leptons[m_diLepton.lidxs.first].p4, jets.p4[diBJet_idxs[wp+order].first]),
-              VectorUtil::DeltaR(m_leptons[m_diLepton.lidxs.second].p4, jets.p4[diBJet_idxs[wp+order].first])
-              );
-          float dr2 = std::min(
+              VectorUtil::DeltaR(m_leptons[m_diLepton.lidxs.second].p4, jets.p4[diBJet_idxs[wp+order].first]),
               VectorUtil::DeltaR(m_leptons[m_diLepton.lidxs.first].p4, jets.p4[diBJet_idxs[wp+order].second]),
               VectorUtil::DeltaR(m_leptons[m_diLepton.lidxs.second].p4, jets.p4[diBJet_idxs[wp+order].second])
-              );
-          float dr = std::min(dr1, dr2);
+              } );
           if(dr < lb_minDR[wp+order])
             lb_minDR[wp+order] = dr;
         }

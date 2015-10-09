@@ -4,7 +4,6 @@
 #include <vector>
 #include <map>
 
-//#include <Math/Vector4D.h>
 #include <Math/PtEtaPhiE4D.h>
 #include <Math/LorentzVector.h>
 
@@ -21,7 +20,7 @@ namespace TTAnalysis{
 
     myLorentzVector p4;
 
-    void clear(void){
+    virtual void clear(){
       p4.SetCoordinates(0,0,0,0);
     }
   };
@@ -36,7 +35,7 @@ namespace TTAnalysis{
     bool isMu;
     bool isEl;
 
-    void clear(void){
+    virtual void clear(){
       BaseObject::clear();
       idx = 0;
       isMu = false;
@@ -57,7 +56,7 @@ namespace TTAnalysis{
     bool isMuEl;
     bool isMuMu;
     
-    void clear(void){
+    virtual void clear(){
       BaseObject::clear();
       idxs.first = -1;
       idxs.second = -1;
@@ -78,7 +77,7 @@ namespace TTAnalysis{
     
     std::pair<int, int> idxs;
     
-    void clear(void){
+    virtual void clear(){
       BaseObject::clear();
       idxs.first = -1;
       idxs.second = -1;
@@ -92,9 +91,7 @@ namespace TTAnalysis{
 template <>
 struct ResetterT<TTAnalysis::BaseObject>: Resetter {
     public:
-        ResetterT(TTAnalysis::BaseObject& data)
-            : mdata(data) {
-            }
+        ResetterT(TTAnalysis::BaseObject& data): mdata(data) {}
 
         virtual void reset() {
             mdata.clear();
@@ -107,9 +104,7 @@ struct ResetterT<TTAnalysis::BaseObject>: Resetter {
 template <typename T1, typename T2>
 struct ResetterT<std::map<T1, T2>>: Resetter {
     public:
-        ResetterT(std::map<T1, T2>& data)
-            : mdata(data) {
-            }
+        ResetterT(std::map<T1, T2>& data): mdata(data) {}
 
         virtual void reset() {
             mdata.clear();
