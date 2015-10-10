@@ -27,8 +27,6 @@ class TTAnalyzer: public Framework::Analyzer {
             m_muonPtCut( config.getUntrackedParameter<double>("muonPtCut", 20) ),
             m_muonEtaCut( config.getUntrackedParameter<double>("muonEtaCut", 2.4) ),
             m_muonBaseIsoCut( config.getUntrackedParameter<double>("muonBaseIsoCut", 0.2) ),
-            //m_muonSelectedIsoCut( config.getUntrackedParameter<double>("muonSelectedIsoCut", 0.2) ),
-            //m_muonSelectedID( config.getUntrackedParameter<std::string>("muonSelectedID") ),
             
             //m_MllBaseCutSF( config.getUntrackedParameter<double>("MllBaseCutSF", 0.) ),
             //m_MllBaseCutDF( config.getUntrackedParameter<double>("MllBaseCutDF", 0.) ),
@@ -51,28 +49,26 @@ class TTAnalyzer: public Framework::Analyzer {
         virtual void analyze(const edm::Event&, const edm::EventSetup&, const ProducersManager&, const CategoryManager&) override;
         virtual void registerCategories(CategoryManager& manager, const edm::ParameterSet&) override;
 
-        //BRANCH(selectedElectrons, std::vector<uint8_t>); // index points to electrons array
         BRANCH(tightElectrons, std::vector<uint8_t>);
         BRANCH(looseElectrons, std::vector<uint8_t>);
         BRANCH(mediumElectrons, std::vector<uint8_t>);
         BRANCH(vetoElectrons, std::vector<uint8_t>);
         
-        //BRANCH(selectedMuons, std::vector<uint8_t>); // index points to muons array
         BRANCH(tightMuons, std::vector<uint8_t>);
         BRANCH(mediumMuons, std::vector<uint8_t>);
         BRANCH(looseMuons, std::vector<uint8_t>);
 
-        /*BRANCH(leadingSelectedMuMu, std::pair<int, int>); // indices point to electrons/muons arrays
-        BRANCH(leadingSelectedMuEl, std::pair<int, int>);
-        BRANCH(leadingSelectedElMu, std::pair<int, int>);
-        BRANCH(leadingSelectedElEl, std::pair<int, int>);*/
-
         BRANCH(leptons, std::vector<TTAnalysis::Lepton>);
         BRANCH(diLeptons, std::vector<TTAnalysis::DiLepton>);
-        BRANCH(diLeptons_ElEl, std::vector< std::map<std::string, uint8_t> >)
-        BRANCH(diLeptons_ElMu, std::vector< std::map<std::string, uint8_t> >)
-        BRANCH(diLeptons_MuEl, std::vector< std::map<std::string, uint8_t> >)
-        BRANCH(diLeptons_MuMu, std::vector< std::map<std::string, uint8_t> >)
+        BRANCH(diLeptons_LL, std::vector<uint8_t>)
+        BRANCH(diLeptons_LM, std::vector<uint8_t>)
+        BRANCH(diLeptons_ML, std::vector<uint8_t>)
+        BRANCH(diLeptons_LT, std::vector<uint8_t>)
+        BRANCH(diLeptons_TL, std::vector<uint8_t>)
+        BRANCH(diLeptons_MM, std::vector<uint8_t>)
+        BRANCH(diLeptons_MT, std::vector<uint8_t>)
+        BRANCH(diLeptons_TM, std::vector<uint8_t>)
+        BRANCH(diLeptons_TT, std::vector<uint8_t>)
 
         BRANCH(selectedJets, std::vector<uint8_t>); // all following indices point to jets array
         BRANCH(selectedJets_tightID, std::vector<uint8_t>);
@@ -138,10 +134,8 @@ class TTAnalyzer: public Framework::Analyzer {
         const std::string m_electronLooseIDName;
         const std::string m_electronMediumIDName;
         const std::string m_electronTightIDName;
-        //const std::string m_electronSelectedIDName;
 
-        const float m_muonPtCut, m_muonEtaCut, m_muonBaseIsoCut/*, m_muonSelectedIsoCut*/;
-        //const std::string m_muonSelectedID;
+        const float m_muonPtCut, m_muonEtaCut, m_muonBaseIsoCut;
 
         //const float m_MllBaseCutSF, m_MllBaseCutDF;
 
@@ -151,7 +145,6 @@ class TTAnalyzer: public Framework::Analyzer {
 
         const float m_hltDRCut, m_hltPtCut;
 
-        //std::vector<TTAnalysis::Lepton> m_leptons;
         //TTAnalysis::DiLepton m_diLepton;
         TTAnalysis::DiJet m_diJet;
         std::map<std::string, TTAnalysis::DiJet> m_diBJet_PtChosen, m_diBJet_CSVv2Chosen;

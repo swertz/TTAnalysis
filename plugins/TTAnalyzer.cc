@@ -24,31 +24,28 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
     for(uint8_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
       if( electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
-        Lepton m_lepton(electron.p4[ielectron], ielectron, electron.charge[ielectron], true, false);
         
-        if( electrons.ids[ielectron][m_electronVetoIDName] ){
+        leptons.push_back( 
+          Lepton(
+            electron.p4[ielectron], 
+            ielectron, 
+            electron.charge[ielectron], 
+            true, false,
+            electrons.ids[ielectron][m_electronLooseIDName],
+            electrons.ids[ielectron][m_electronMediumIDName],
+            electrons.ids[ielectron][m_electronTightIDName],
+            electrons.ids[ielectron][m_electronVetoIDName]
+          )
+        );
+        
+        if( electrons.ids[ielectron][m_electronVetoIDName] )
           vetoElectrons.push_back(ielectron);
-          m_lepton.lID["veto"] = true;
-        }
-        if( electrons.ids[ielectron][m_electronLooseIDName] ){
+        if( electrons.ids[ielectron][m_electronLooseIDName] )
           looseElectrons.push_back(ielectron);
-          m_lepton.lID["loose"] = true;
-        }
-        if( electrons.ids[ielectron][m_electronMediumIDName] ){
+        if( electrons.ids[ielectron][m_electronMediumIDName] )
           mediumElectrons.push_back(ielectron);
-          m_lepton.lID["medium"] = true;
-        }
-        if( electrons.ids[ielectron][m_electronTightIDName] ){
+        if( electrons.ids[ielectron][m_electronTightIDName] )
           tightElectrons.push_back(ielectron);
-          m_lepton.lID["tight"] = true;
-        }
-
-        lepton.push_back(m_lepton);
-
-        /*if( electrons.ids[ielectron][m_electronSelectedIDName] ){
-            selectedElectrons.push_back(ielectron);
-            m_leptons.push_back( { electrons.p4[ielectron], ielectron, true, false } );
-        }*/
       }
     }
 
@@ -60,38 +57,30 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
     for(uint8_t imuon = 0; imuon < muons.p4.size(); imuon++){
       if(muons.relativeIsoR04_withEA[imuon] < m_muonBaseIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
-        Lepton m_lepton(muon.p4[imuon], imuon, muon.charge[imuon], false, true);
+        
+        leptons.push_back(
+          Lepton(
+            muon.p4[imuon], 
+            imuon,
+            muon.charge[imuon], 
+            false, true
+            muons.isLoose[imuon],
+            muons.isMedium[imuon],
+            muons.isTight[imuon]
+          )
+        );
 
-        if( muons.isLoose[imuon] ){
+        if( muons.isLoose[imuon] )
           looseMuons.push_back(imuon);
-          m_lepton.lID["loose"] = true;
-        }
-        if( muons.isMedium[imuon] ){
+        if( muons.isMedium[imuon] )
           mediumMuons.push_back(imuon);
-          m_lepton.lID["medium"] = true;
-        }
-        if( muons.isTight[imuon] ){
+        if( muons.isTight[imuon] )
           tightMuons.push_back(imuon);
-          m_lepton.lID["tight"] = true;
-        }
-
-        leptons.push_back(m_lepton);
       }
-
-      /*if(muonIDAccessor(muons, imuon, m_muonSelectedID) && muons.relativeIsoR04_withEA[imuon] < m_muonSelectedIsoCut && muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
-          selectedMuons.push_back(imuon);
-          m_leptons.push_back( { muons.p4[imuon], imuon, false, true } );
-      }*/
     }
 
     // Sort the leptons vector according to Pt
     std::sort(leptons.begin(), leptons.end(), [](const Lepton& a, const Lepton &b){ return b.p4.Pt() > a.p4.Pt(); });
-    /*for(const Lepton& lepton: m_leptons){
-      lepton_p4.push_back(lepton.p4);
-      lepton_idx.push_back(lepton.idx);
-      lepton_isMu.push_back(lepton.isMu);
-      lepton_isEl.push_back(lepton.isEl);
-    }*/
 
     ///////////////////////////
     //       DILEPTONS       //
@@ -102,136 +91,54 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
         const Lepton& l1 = leptons[i1];
         const Lepton& l2 = leptons[i2];
 
-        diLeptons.push_back( diLepton(
-            l1.p4 + l2.p4, 
-            std::make_pair(l1.idx, l2.idx), 
-            std::make_pair(i1, i2), 
-            l1.isEl && l2.isEl,
-            l1.isEl && l2.isMu,
-            l1.isMu && l2.isEl,
-            l1.isMu && l2.isMu,
-            l1.charge != l2.charge,
-            (l1.isEl && l2.isEl) || (l1.isMu && l2.isMu),
-            VectorUtil::DeltaR(l1.p4, l2.p4),
-            TTAnalysis::DeltaEta(l1.p4, l2.p4),
-            VectorUtil::DeltaPhi(l1.p4, l2.p4)
-            ) );
+        DiLepton m_diLepton();
+
+        m_diLepton.p4 = l1.p4 + l2.p4; 
+        m_diLepton.idxs = std::make_pair(l1.idx; l2.idx); 
+        m_diLepton.lidxs = std::make_pair(i1; i2); 
+        m_diLepton.isElEl = l1.isEl && l2.isEl;
+        m_diLepton.isElMu = l1.isEl && l2.isMu;
+        m_diLepton.isMuEl = l1.isMu && l2.isEl;
+        m_diLepton.isMuMu = l1.isMu && l2.isMu;
+        m_diLepton.isOS = l1.charge != l2.charge;
+        m_diLepton.isSF = m_diLepton.isElEl || m_diLepton.isMuMu;
+        m_diLepton.lepID_LL = l1.lepID[lepID::L] && l2.lepID[lepID::L];
+        m_diLepton.lepID_LM = l1.lepID[lepID::L] && l2.lepID[lepID::M];
+        m_diLepton.lepID_ML = l1.lepID[lepID::M] && l2.lepID[lepID::L];
+        m_diLepton.lepID_LT = l1.lepID[lepID::L] && l2.lepID[lepID::T];
+        m_diLepton.lepID_TL = l1.lepID[lepID::T] && l2.lepID[lepID::L];
+        m_diLepton.lepID_MM = l1.lepID[lepID::M] && l2.lepID[lepID::M];
+        m_diLepton.lepID_MT = l1.lepID[lepID::M] && l2.lepID[lepID::T];
+        m_diLepton.lepID_TM = l1.lepID[lepID::T] && l2.lepID[lepID::M];
+        m_diLepton.lepID_TT = l1.lepID[lepID::T] && l2.lepID[lepID::T];
+        m_diLepton.DR = VectorUtil::DeltaR(l1.p4; l2.p4);
+        m_diLepton.DEta = TTAnalysis::DeltaEta(l1.p4; l2.p4);
+        m_diLepton.DPhi = VectorUtil::DeltaPhi(l1.p4; l2.p4);
+
+        diLeptons.push_back(m_diLepton);
       }
     }
-    
-    
 
-    // First find the highest-Pt opposite-charge pairs for each couple of flavours, on selected objets only
-    // Already apply a cut on Mll
-    
-    /*leadingSelectedElEl = std::make_pair(-1, -1);
-    leadingSelectedElMu = std::make_pair(-1, -1);
-    leadingSelectedMuEl = std::make_pair(-1, -1);
-    leadingSelectedMuMu = std::make_pair(-1, -1);
-
-    float tempSumPtElEl(0), tempSumPtElMu(0), tempSumPtMuEl(0), tempSumPtMuMu(0); 
-
-    // El-El
-    for(uint8_t iele1 = 0; iele1 < selectedElectrons.size(); iele1++){
-        for(uint8_t iele2 = iele1+1; iele2 < selectedElectrons.size(); iele2++){
-            if( electrons.charge[ selectedElectrons[iele1] ] * electrons.charge[ selectedElectrons[iele2] ] < 0 && (electrons.p4[ selectedElectrons[iele1] ] + electrons.p4[ selectedElectrons[iele2] ]).M() > m_MllBaseCutSF ){
-                leadingSelectedElEl = std::make_pair(iele1, iele2);
-                tempSumPtElEl = electrons.p4[ selectedElectrons[iele1] ].Pt() + electrons.p4[ selectedElectrons[iele2] ].Pt(); 
-                break;
-            }
-        }
-        if(leadingSelectedElEl.first >= 0)
-            break;
+    for(uint8_t i = 0; i < diLeptons.size(); i++){
+      if(m_diLepton.lepID_LL)
+        diLeptons_LL.push_back(i);
+      if(m_diLepton.lepID_LM)
+        diLeptons_LM.push_back(i);
+      if(m_diLepton.lepID_ML)
+        diLeptons_ML.push_back(i);
+      if(m_diLepton.lepID_LT)
+        diLeptons_LT.push_back(i);
+      if(m_diLepton.lepID_TL)
+        diLeptons_TL.push_back(i);
+      if(m_diLepton.lepID_MM)
+        diLeptons_MM.push_back(i);
+      if(m_diLepton.lepID_MT)
+        diLeptons_MT.push_back(i);
+      if(m_diLepton.lepID_TM)
+        diLeptons_TM.push_back(i);
+      if(m_diLepton.lepID_TT)
+        diLeptons_TT.push_back(i);
     }
-
-    // El-Mu
-    for(uint8_t iele = 0; iele < selectedElectrons.size(); iele++){
-        for(uint8_t imu = 0; imu < selectedMuons.size(); imu++){
-            if( electrons.p4[ selectedElectrons[iele] ].Pt() > muons.p4[ selectedMuons[imu] ].Pt() && electrons.charge[ selectedElectrons[iele] ] * muons.charge[ selectedMuons[imu] ] < 0 && (electrons.p4[ selectedElectrons[iele] ] + muons.p4[ selectedMuons[imu] ]).M() > m_MllBaseCutDF){
-                leadingSelectedElMu = std::make_pair(iele, imu);
-                tempSumPtElMu = electrons.p4[ selectedElectrons[iele] ].Pt() + muons.p4[ selectedMuons[imu] ].Pt(); 
-                break;
-            }
-        }
-        if(leadingSelectedElMu.first >= 0)
-            break;
-    }
-    
-    // Mu-El
-    for(uint8_t imu = 0; imu < selectedMuons.size(); imu++){
-        for(uint8_t iele = 0; iele < selectedElectrons.size(); iele++){
-            if( electrons.p4[ selectedElectrons[iele] ].Pt() < muons.p4[ selectedMuons[imu] ].Pt() && electrons.charge[ selectedElectrons[iele] ] * muons.charge[ selectedMuons[imu] ] < 0 && (electrons.p4[ selectedElectrons[iele] ] + muons.p4[ selectedMuons[imu] ]).M() > m_MllBaseCutDF){
-                leadingSelectedMuEl = std::make_pair(imu, iele);
-                tempSumPtMuEl = electrons.p4[ selectedElectrons[iele] ].Pt() + muons.p4[ selectedMuons[imu] ].Pt(); 
-                break;
-            }
-        }
-        if(leadingSelectedMuEl.first >= 0)
-            break;
-    }
-
-    // Mu-Mu
-    for(uint8_t imu1 = 0; imu1 < selectedMuons.size(); imu1++){
-        for(uint8_t imu2 = imu1+1; imu2 < selectedMuons.size(); imu2++){
-            if( muons.charge[ selectedMuons[imu1] ] * muons.charge[ selectedMuons[imu2] ] < 0 && (muons.p4[ selectedMuons[imu1] ] + muons.p4[ selectedMuons[imu2] ]).M() > m_MllBaseCutSF){
-                leadingSelectedMuMu = std::make_pair(imu1, imu2);
-                tempSumPtMuMu = muons.p4[ selectedMuons[imu1] ].Pt() + muons.p4[ selectedMuons[imu2] ].Pt(); 
-                break;
-            }
-        }
-        if(leadingSelectedMuMu.first >= 0)
-            break;
-    }
-
-    // Next, we define the selected lepton pair as the highest Sum(Pt) pair
-
-    if( (tempSumPtElEl > 0) && (tempSumPtElEl > tempSumPtElMu) && (tempSumPtElEl > tempSumPtMuEl) && (tempSumPtElEl > tempSumPtMuMu) ){
-      m_diLepton = { 
-        electrons.p4[leadingSelectedElEl.first] + electrons.p4[leadingSelectedElEl.second], 
-        std::make_pair(leadingSelectedElEl.first, leadingSelectedElEl.second), // electron/muon indices
-        std::make_pair(-1, -1), // lepton indices to be retrieved later
-        true, false, false, false
-        };
-    }else if( (tempSumPtElMu > 0) && (tempSumPtElMu > tempSumPtElEl) && (tempSumPtElMu > tempSumPtMuEl) && (tempSumPtElMu > tempSumPtMuMu) ){
-      m_diLepton = { 
-        electrons.p4[leadingSelectedElMu.first] + muons.p4[leadingSelectedElMu.second], 
-        std::make_pair(leadingSelectedElMu.first, leadingSelectedElMu.second),
-        std::make_pair(-1, -1),
-        false, true, false, false
-        };
-    }else if( (tempSumPtMuEl > 0) && (tempSumPtMuEl > tempSumPtElEl) && (tempSumPtMuEl > tempSumPtElMu) && (tempSumPtMuEl > tempSumPtMuMu) ){
-      m_diLepton = { 
-        muons.p4[leadingSelectedMuEl.first] + electrons.p4[leadingSelectedMuEl.second], 
-        std::make_pair(leadingSelectedMuEl.first, leadingSelectedMuEl.second),
-        std::make_pair(-1, -1),
-        false, false, true, false
-        };
-    }else if( (tempSumPtMuMu > 0) && (tempSumPtMuMu > tempSumPtElEl) && (tempSumPtMuMu > tempSumPtElMu) && (tempSumPtMuMu > tempSumPtMuEl) ){
-      m_diLepton = { 
-        muons.p4[leadingSelectedMuMu.first] + muons.p4[leadingSelectedMuMu.second], 
-        std::make_pair(leadingSelectedMuMu.first, leadingSelectedMuMu.second),
-        std::make_pair(-1, -1),
-        false, false, false, true
-        };
-    }else{
-      m_diLepton = { myLorentzVector(), std::make_pair(-1, -1), std::make_pair(-1, -1), false, false, false, false };
-    }
-
-    diLepton_p4 = m_diLepton.p4;
-    diLepton_idxs = m_diLepton.idxs;
-    for(uint8_t i = 0; i<m_leptons.size(); ++i){
-      if(m_leptons[i].idx == diLepton_idxs.first) diLepton_lidxs.first = i;
-      if(m_leptons[i].idx == diLepton_idxs.second) diLepton_lidxs.second = i;
-    }
-    diLepton_isElEl = m_diLepton.isElEl;
-    diLepton_isElMu = m_diLepton.isElMu;
-    diLepton_isMuEl = m_diLepton.isMuEl;
-    diLepton_isMuMu = m_diLepton.isMuMu;
-    if(m_diLepton.lidxs.first >= 0){
-      diLepton_DR = VectorUtil::DeltaR( lepton_p4[ m_diLepton.lidxs.first ], lepton_p4[ m_diLepton.lidxs.second ] );
-      diLepton_DPhi = VectorUtil::DeltaPhi( lepton_p4[ m_diLepton.lidxs.first ], lepton_p4[ m_diLepton.lidxs.second ] );
-      diLepton_DEta = DeltaEta( lepton_p4[ m_diLepton.lidxs.first ], lepton_p4[ m_diLepton.lidxs.second ] );
-    }*/
 
     ///////////////////////////
     //       JETS            //

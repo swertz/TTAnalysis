@@ -14,6 +14,10 @@
 
 namespace TTAnalysis{
 
+  enum class lepID{ L, M, T, V };
+  enum class jetID{ L, T, TLV };
+  enum class btWP{ L, M, T };
+
   struct BaseObject {
     BaseObject(myLorentzVector p4): p4(p4) {}
     BaseObject() {}
@@ -22,18 +26,18 @@ namespace TTAnalysis{
 
     virtual void clear(){
       p4.SetCoordinates(0,0,0,0);
-    }
+    }  
   };
 
   struct Lepton: BaseObject {
     Lepton(myLorentzVector p4, uint8_t idx, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false):
       BaseObject(p4), idx(idx), charge(charge), isEl(isEl), isMu(isMu)
       {
-        lID["loose"] = isLoose;
-        lID["medium"] = isMedium;
-        lID["tight"] = isTight;
+        lepID.push_back(isLoose);
+        lepID.push_back(isMedium);
+        lepID.push_back(isTight);
         if(isEl)
-          lID["veto"] = isVeto;
+          lepID.push_back(isVeto);
       }
     Lepton() {}
     
@@ -41,45 +45,35 @@ namespace TTAnalysis{
     uint8_t charge;
     bool isEl;
     bool isMu;
-    std::map<std::string, bool> lID; // lepton IDs
-    /*bool isLoose;
-    bool isMedium;
-    bool isTight;
-    bool isVeto;*/
+    std::vector<bool> lepID; // lepton IDs: loose-medium-tight(-veto)
 
-    virtual void clear(){
+    /*virtual void clear(){
       BaseObject::clear();
       idx = -1;
       charge = 0;
       isEl = false;
       isMu = false;
-      lID.clear();
-      /*isVeto = false;
-      isLoose = false;
-      isMedium = false;
-      isTight = false;*/
-    }
+      lepID.clear();
+    }*/
   };
   
   struct DiLepton: BaseObject {
-    DiLepton(myLorentzVector p4, std::pair<int, int> idxs, std::pair<int, int> lidxs, bool isElEl, bool isElMu, bool isMuEl, bool isMuMu, bool isOS, bool isSF, float DR, float DEta, float DPhi):
+    /*DiLepton(myLorentzVector p4, std::pair<int, int> idxs, std::pair<int, int> lidxs, bool isElEl, bool isElMu, bool isMuEl, bool isMuMu, bool isOS, bool isSF, float DR, float DEta, float DPhi):
       BaseObject(p4), idxs(idxs), lidxs(lidxs), isElEl(isElEl), isElMu(isElMu), isMuEl(isMuEl), isMuMu(isMuMu), isOS(isOS), isSF(isSF), DR(DR), DEta(DEta), DPhi(DPhi)
       {}
-    DiLepton() {}
+    DiLepton() {}*/
     
     std::pair<int, int> idxs; // stores indices to electron/muon arrays
     std::pair<int, int> lidxs; // stores indices to Lepton array
-    bool isElEl;
-    bool isElMu;
-    bool isMuEl;
-    bool isMuMu;
+    bool isElEl, isElMu, isMuEl, isMuMu;
     bool isOS; // opposite sign
     bool isSF; // same flavour
+    bool lepID_LL, lepID_LM, lepID_ML, lepID_LT, lepID_TL, lepID_MM, lepID_MT, lepID_TM, lepID_TT;
     float DR;
     float DEta;
     float DPhi;
     
-    virtual void clear(){
+    /*virtual void clear(){
       BaseObject::clear();
       idxs.first = -1;
       idxs.second = -1;
@@ -94,7 +88,7 @@ namespace TTAnalysis{
       DR = -1;
       DEta = -1;
       DPhi = -1;
-    }
+    }*/
   };
   
   struct DiJet: BaseObject {
@@ -109,18 +103,18 @@ namespace TTAnalysis{
     float DEta;
     float DPhi;
     
-    virtual void clear(){
+    /*virtual void clear(){
       BaseObject::clear();
       idxs.first = -1;
       idxs.second = -1;
-    }
+    }*/
   };
 
 }
 
 // Needed for TreeWrapper to handle the objects correctly
 
-template <>
+/*template <>
 struct ResetterT<TTAnalysis::BaseObject>: Resetter {
     public:
         ResetterT(TTAnalysis::BaseObject& data): mdata(data) {}
@@ -145,4 +139,4 @@ struct ResetterT<std::map<T1, T2>>: Resetter {
     private:
         std::map<T1, T2>& mdata;
 };
-
+*/
