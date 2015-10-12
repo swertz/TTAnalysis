@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 #include <map>
+#include <limits>
+#include <array>
 
 #include <Math/PtEtaPhiE4D.h>
 #include <Math/LorentzVector.h>
@@ -14,9 +16,20 @@
 
 namespace TTAnalysis{
 
-  enum class lepID{ L, M, T, V };
-  enum class jetID{ L, T, TLV };
-  enum class btWP{ L, M, T };
+  enum class LepID{ L, M, T, V, Count };
+  // Ugly way to allow iterating over all items in the enumeration:
+  const std::array<LepID, size_t(LepID::Count)> allLepID = { LepID::L, LepID::M, LepID::T, LepID::V };
+  
+  enum class LepLepID{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
+  const std::array<LepLepID, size_t(LepLepID::Count)> allLepLepID{ LepLepID::LL, LepLepID::LM, LepLepID::ML, LepLepID::LT, LepLepID::TL, LepLepID::MM, LepLepID::MT, LepLepID::TM, LepLepID::TT };
+  
+  enum class JetID{ L, T, TLV, Count };
+  
+  enum class BWP{ L, M, T, Count };
+  const std::array<BWP, size_t(BWP::Count)> allBWP{ BWP::L, BWP::M, BWP::T };
+  
+  enum class BBWP{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
+  const std::array<BBWP, size_t(BBWP::Count)> allBBWP{ BBWP::LL, BBWP::LM, BBWP::ML, BBWP::LT, BBWP::TL, BBWP::MM, BBWP::MT, BBWP::TM, BBWP::TT };
 
   struct BaseObject {
     BaseObject(myLorentzVector p4): p4(p4) {}
@@ -60,15 +73,17 @@ namespace TTAnalysis{
   struct DiLepton: BaseObject {
     /*DiLepton(myLorentzVector p4, std::pair<int, int> idxs, std::pair<int, int> lidxs, bool isElEl, bool isElMu, bool isMuEl, bool isMuMu, bool isOS, bool isSF, float DR, float DEta, float DPhi):
       BaseObject(p4), idxs(idxs), lidxs(lidxs), isElEl(isElEl), isElMu(isElMu), isMuEl(isMuEl), isMuMu(isMuMu), isOS(isOS), isSF(isSF), DR(DR), DEta(DEta), DPhi(DPhi)
+      {}*/
+    DiLepton():
+      lepIDs(LepLepID::Count, false)
       {}
-    DiLepton() {}*/
     
     std::pair<int, int> idxs; // stores indices to electron/muon arrays
     std::pair<int, int> lidxs; // stores indices to Lepton array
     bool isElEl, isElMu, isMuEl, isMuMu;
     bool isOS; // opposite sign
     bool isSF; // same flavour
-    bool lepID_LL, lepID_LM, lepID_ML, lepID_LT, lepID_TL, lepID_MM, lepID_MT, lepID_TM, lepID_TT;
+    std::vector<bool> lepIDs;
     float DR;
     float DEta;
     float DPhi;
@@ -92,13 +107,18 @@ namespace TTAnalysis{
   };
   
   struct DiJet: BaseObject {
-    DiJet(myLorentzVector p4, std::pair<int, int> idxs):
+    /*DiJet(myLorentzVector p4, std::pair<int, int> idxs):
       BaseObject(p4), idxs(idxs)
+      {}*/
+    DiJet():
+      minDRjl_lepIDs(LepLepID::Count, std::numeric_limits<float>::max()),
+      CSVv2_WPs(BBWP::Count, false)
       {}
-    DiJet() {}
     
     std::pair<int, int> idxs; // stores indices to jets array
-    std::pair<int, int> jidxs; // stores indices to TTAnalysis::Jet array
+    //std::pair<int, int> jidxs; // stores indices to TTAnalysis::Jet array
+    float minDRjl_lepIDs;
+    std::vector<bool> CSVv2_WPs;
     float DR;
     float DEta;
     float DPhi;
