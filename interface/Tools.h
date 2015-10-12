@@ -26,38 +26,30 @@ namespace TTAnalysis {
       const std::string m_taggerName;
   };
 
-  // Used by std::sort to sort DiJets according to decreasing b-tagging discriminant value, directly on DiJet objects
+  // Used by std::sort to sort DiJets according to decreasing b-tagging discriminant value
   class diJetBTagDiscriminantSorter {
     
     public:
-  
+ 
+      // Either work directly on DiJet objects
+
       diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName): m_jetsProducer(jets), m_taggerName(taggerName) {}
       
       bool operator()(const DiJet& diJet1, const DiJet& diJet2){
         return ( m_jetsProducer.getBTagDiscriminant(diJet1.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(diJet1.idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant(diJet2.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(diJet2.idxs.second, m_taggerName) );
       }
-  
-    private:
-  
-      const JetsProducer& m_jetsProducer;
-      const std::string m_taggerName;
-  };
-  
-  // Used by std::sort to sort DiJets according to decreasing CSVv2 b-tagging discriminant value, working on DiJet indices
-  class diJetBTagDiscriminantSorterOnIdxs {
-    
-    public:
+
+      // Or work on vectors containing indices pointing to jets themselves
   
       diJetBTagDiscriminantSorterOnIdxs(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiJet>& diJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(diJets) {}
       
       bool operator()(const int idx1, const int idx2){
         return ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.second, m_taggerName) );
       }
-  
+    
     private:
   
       const JetsProducer& m_jetsProducer;
       const std::string m_taggerName;
       const std::vector<DiJet>& m_diJets; 
   };
-}

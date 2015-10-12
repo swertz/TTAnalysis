@@ -59,21 +59,9 @@ namespace TTAnalysis{
     bool isEl;
     bool isMu;
     std::vector<bool> lepID; // lepton IDs: loose-medium-tight(-veto)
-
-    /*virtual void clear(){
-      BaseObject::clear();
-      idx = -1;
-      charge = 0;
-      isEl = false;
-      isMu = false;
-      lepID.clear();
-    }*/
   };
   
   struct DiLepton: BaseObject {
-    /*DiLepton(myLorentzVector p4, std::pair<int, int> idxs, std::pair<int, int> lidxs, bool isElEl, bool isElMu, bool isMuEl, bool isMuMu, bool isOS, bool isSF, float DR, float DEta, float DPhi):
-      BaseObject(p4), idxs(idxs), lidxs(lidxs), isElEl(isElEl), isElMu(isElMu), isMuEl(isMuEl), isMuMu(isMuMu), isOS(isOS), isSF(isSF), DR(DR), DEta(DEta), DPhi(DPhi)
-      {}*/
     DiLepton():
       lepIDs(LepLepID::Count, false)
       {}
@@ -87,29 +75,9 @@ namespace TTAnalysis{
     float DR;
     float DEta;
     float DPhi;
-    
-    /*virtual void clear(){
-      BaseObject::clear();
-      idxs.first = -1;
-      idxs.second = -1;
-      lidxs.first = -1;
-      lidxs.second = -1;
-      isElEl = false;
-      isElMu = false;
-      isMuEl = false;
-      isMuMu = false;
-      isOS = false;
-      isSF = false;
-      DR = -1;
-      DEta = -1;
-      DPhi = -1;
-    }*/
   };
   
   struct DiJet: BaseObject {
-    /*DiJet(myLorentzVector p4, std::pair<int, int> idxs):
-      BaseObject(p4), idxs(idxs)
-      {}*/
     DiJet():
       minDRjl_lepIDs(LepLepID::Count, std::numeric_limits<float>::max()),
       CSVv2_WPs(BBWP::Count, false)
@@ -122,41 +90,21 @@ namespace TTAnalysis{
     float DR;
     float DEta;
     float DPhi;
-    
-    /*virtual void clear(){
-      BaseObject::clear();
-      idxs.first = -1;
-      idxs.second = -1;
-    }*/
   };
 
+  struct DiLepDiJet: BaseObject {
+    DiLepDiJet(DiLepton diLepton, DiJet diJet):
+      diLepton(diLepton),
+      diJet(diJet)
+      {
+        minDRjl = std::min( { 
+            VectorUtil::DeltaR(
+      }
+
+    DiLepton diLepton;
+    DiJet diJet;
+
+    float minDRjl, maxDRjl;
+    float minDEtajl, maxDEtajl;
+    float minDPhijl, maxDPhijl;
 }
-
-// Needed for TreeWrapper to handle the objects correctly
-
-/*template <>
-struct ResetterT<TTAnalysis::BaseObject>: Resetter {
-    public:
-        ResetterT(TTAnalysis::BaseObject& data): mdata(data) {}
-
-        virtual void reset() {
-            mdata.clear();
-        }
-
-    private:
-        TTAnalysis::BaseObject& mdata;
-};
-
-template <typename T1, typename T2>
-struct ResetterT<std::map<T1, T2>>: Resetter {
-    public:
-        ResetterT(std::map<T1, T2>& data): mdata(data) {}
-
-        virtual void reset() {
-            mdata.clear();
-        }
-
-    private:
-        std::map<T1, T2>& mdata;
-};
-*/

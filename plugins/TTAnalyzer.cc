@@ -302,7 +302,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     diBJets_DRCut_BBWPs_CSVv2Ordered = diBJets_DRCut_BBWPs_PtOrdered;
     for(const LepLepID& id: allLepLepID){
       for(const BBWP& wp: allBBWP)
-        std::sort(diBJets_DRCut_BBWPs_CSVv2Ordered[size_t(id)][size_t(wp)].begin(), diBJets_DRCut_BBWPs_CSVv2Ordered[size_t(id)][size_t(wp)].end(), diJetBTagDiscriminantSorterOnIdxs(jets, m_jetCSVv2Name, diJets));
+        std::sort(diBJets_DRCut_BBWPs_CSVv2Ordered[size_t(id)][size_t(wp)].begin(), diBJets_DRCut_BBWPs_CSVv2Ordered[size_t(id)][size_t(wp)].end(), diJetBTagDiscriminantSorter(jets, m_jetCSVv2Name, diJets));
     }
 
 
