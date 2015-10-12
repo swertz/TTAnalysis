@@ -5,4 +5,3 @@
 <use name="cp3_llbb/TreeWrapper"/>
 <use name="cp3_llbb/TTAnalysis"/>
 <flags EDM_PLUGIN="1"/>
-<flags CXXFLAGS="-std=c++11"/>

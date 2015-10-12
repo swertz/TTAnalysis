@@ -47,6 +47,22 @@ namespace TTAnalysis {
     const std::array<BBWP, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
   }
 
+    enum TTDecayType {
+        NotTT = 0,
+        Hadronic,
+        Semileptonic_e,
+        Semileptonic_mu,
+        Dileptonic_mumu,
+        Dileptonic_ee,
+        Dileptonic_mue,
+
+        // With tau
+        Semileptonic_tau,
+        Dileptonic_tautau,
+        Dileptonic_mutau,
+        Dileptonic_etau
+    };
+
   struct BaseObject {
     BaseObject(myLorentzVector p4): p4(p4) {}
     BaseObject() {}
@@ -79,6 +95,11 @@ namespace TTAnalysis {
     std::vector<bool> lepID; // lepton IDs: loose-medium-tight(-veto)
 
     bool hlt_already_matched = false; // Internal flag; if true, it means this lepton has already been matched to an online object, even if no match has been found.
+
+    int8_t pdg_id() const {
+        int8_t id = (isEl) ? 11 : 13;
+        return charge * id;
+    }
   };
   
   struct DiLepton: BaseObject {
