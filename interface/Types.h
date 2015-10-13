@@ -1,5 +1,4 @@
-#ifndef __TYPES_H_
-#define __TYPES_H_
+#pragma once
 
 #include <utility>
 #include <vector>
@@ -181,4 +180,3 @@ namespace TTAnalysis {
 
 }
 
-#endif

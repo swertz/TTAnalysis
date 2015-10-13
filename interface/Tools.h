@@ -1,5 +1,4 @@
-#ifndef __TOOLS_H_
-#define __TOOLS_H_
+#pragma once
 
 #include <cp3_llbb/TTAnalysis/interface/Types.h>
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
@@ -67,4 +66,3 @@ namespace TTAnalysis {
 
 }
 
-#endif
