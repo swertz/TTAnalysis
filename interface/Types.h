@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __TYPES_H_
+#define __TYPES_H_
 
 #include <utility>
 #include <vector>
@@ -8,40 +9,43 @@
 
 #include <Math/PtEtaPhiE4D.h>
 #include <Math/LorentzVector.h>
+#include <Math/VectorUtil.h>
 
 #include <cp3_llbb/TreeWrapper/interface/Resetter.h>
-
-#define BRANCHNOCLEAR(NAME, ...) __VA_ARGS__& NAME = tree[#NAME].write<__VA_ARGS__>(false)
 
 // Needed because of gcc bug when using typedef and std::map
 #define myLorentzVector ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float>>
 
-namespace TTAnalysis{
+namespace TTAnalysis {
 
+  float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2){
+    return abs(v1.Eta() - v2.Eta());
+  }
+  
   namespace LepID{
     enum LepID{ L, M, T, V, Count };
     // Ugly way to allow iterating over all items in the enumeration ( for(const LepID::LepID& id: LepID::it) )
-    const std::array<LepID, Count> it = { L, M, T, V };
+    const std::array<LepID, Count> it = {{ L, M, T, V }};
   }
   
   namespace LepLepID{
     enum LepLepID{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
-    const std::array<LepLepID, Count> it = { LL, LM, ML, LT, TL, MM, MT, TM, TT };
+    const std::array<LepLepID, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
   }
   
   namespace JetID{
     enum JetID{ L, T, TLV, Count };
-    const std::array<JetID, Count> it = { L, T, TLV };
+    const std::array<JetID, Count> it = {{ L, T, TLV }};
   }
   
   namespace BWP{
     enum BWP{ L, M, T, Count };
-    const std::array<BWP, Count> it = { L, M, T };
+    const std::array<BWP, Count> it = {{ L, M, T }};
   }
   
   namespace BBWP{
     enum BBWP{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
-    const std::array<BBWP, Count> it = { LL, LM, ML, LT, TL, MM, MT, TM, TT };
+    const std::array<BBWP, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
   }
 
   struct BaseObject {
@@ -52,7 +56,7 @@ namespace TTAnalysis{
   };
 
   struct Lepton: BaseObject {
-    Lepton(myLorentzVector p4, uint8_t idx, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false):
+    Lepton(myLorentzVector p4, uint8_t idx, uint8_t charge, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false):
       BaseObject(p4), idx(idx), charge(charge), isEl(isEl), isMu(isMu)
       {
         lepID.push_back(isLoose);
@@ -96,7 +100,7 @@ namespace TTAnalysis{
     
     std::pair<int, int> idxs; // stores indices to jets array
     //std::pair<int, int> jidxs; // stores indices to TTAnalysis::Jet array (NOT implemented... necessary??)
-    float minDRjl_lepIDs;
+    std::vector<float> minDRjl_lepIDs;
     std::vector<bool> CSVv2_WPs;
     float DR;
     float DEta;
@@ -104,14 +108,14 @@ namespace TTAnalysis{
   };
 
   struct DiLepDiJet: BaseObject {
-    DiLepDiJet(DiLepton& diLepton, const int diLepIdx, DiJet& diJet, const int diJetIdx):
+    DiLepDiJet(const DiLepton& diLepton, const int diLepIdx, const DiJet& diJet, const int diJetIdx):
       BaseObject(diLepton.p4 + diJet.p4),
       diLepton(diLepton),
       diLepIdx(diLepIdx),
       diJet(diJet),
-      diJetIdx(diJetIxd),
+      diJetIdx(diJetIdx),
       DR_ll_jj( ROOT::Math::VectorUtil::DeltaR(diLepton.p4, diJet.p4) ),
-      DEta_ll_jj( ROOT::Math::DeltaEta(diLepton.p4, diJet.p4) ),
+      DEta_ll_jj( DeltaEta(diLepton.p4, diJet.p4) ),
       DPhi_ll_jj( ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4, diJet.p4) )
       {}
 
@@ -128,17 +132,18 @@ namespace TTAnalysis{
   };
 
   struct DiLepDiJetMet: DiLepDiJet {
-    DiLepDiJetMet(DiLepDiJet& diLepDiJet, uint8_t diLepDiJetIdx, LorentzVector& MetP4, bool hasNoHFMet = false):
+    DiLepDiJetMet(const DiLepDiJet& diLepDiJet, uint8_t diLepDiJetIdx, const myLorentzVector& MetP4, bool hasNoHFMet = false):
       DiLepDiJet(diLepDiJet.diLepton, diLepDiJet.diLepIdx, diLepDiJet.diJet, diLepDiJet.diJetIdx),
       diLepDiJetIdx(diLepDiJetIdx),
-      minDRjl(DiLepDiJet.minDRjl),
-      maxDRjl(DiLepDiJet.maxDRjl),
-      minDEtajl(DiLepDiJet.minDEtajl),
-      maxDEtajl(DiLepDiJet.maxDEtajl),
-      minDPhijl(DiLepDiJet.minDPhijl),
-      maxDPhijl(DiLepDiJet.maxDPhijl),
       hasNoHFMet(hasNoHFMet)
     {
+      DiLepDiJet::minDRjl = diLepDiJet.minDRjl;
+      DiLepDiJet::maxDRjl = diLepDiJet.maxDRjl;
+      DiLepDiJet::minDEtajl = diLepDiJet.minDEtajl;
+      DiLepDiJet::maxDEtajl = diLepDiJet.maxDEtajl;
+      DiLepDiJet::minDPhijl = diLepDiJet.minDPhijl;
+      DiLepDiJet::maxDPhijl = diLepDiJet.maxDPhijl;
+      
       p4 += MetP4;
 
       DR_ll_Met = ROOT::Math::VectorUtil::DeltaR(diLepton.p4, MetP4);
@@ -151,11 +156,11 @@ namespace TTAnalysis{
       DPhi_jj_Met = ROOT::Math::VectorUtil::DeltaPhi(diJet.p4, MetP4);
       
       DR_lljj_Met = ROOT::Math::VectorUtil::DeltaR(diLepton.p4 + diJet.p4, MetP4);
-      DEta_lljj_Met = ROOT::Math::DeltaEta(diLepton.p4 + diJet.p4, MetP4);
+      DEta_lljj_Met = DeltaEta(diLepton.p4 + diJet.p4, MetP4);
       DPhi_lljj_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4 + diJet.p4, MetP4);
     }
 
-    uint8_t diLepDiJetIdx:
+    uint8_t diLepDiJetIdx;
     bool hasNoHFMet;
 
     float DR_ll_Met, DR_jj_Met;
@@ -175,3 +180,5 @@ namespace TTAnalysis{
   };
 
 }
+
+#endif

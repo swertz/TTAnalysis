@@ -17,25 +17,12 @@ class TTAnalyzer: public Framework::Analyzer {
         TTAnalyzer(const std::string& name, const ROOT::TreeGroup& tree_, const edm::ParameterSet& config):
             Analyzer(name, tree_, config),
             
-            diLeptons_LepIDs(LepLepID::Count, std::vector<uint8_t>()),
-            diJets_DRCut(LepLepID::Count, std::vector<uint8_t>()),
-            selectedJets_tightID_DRCut(LepLepID::Count, std::vector<uint8_t>()),
-            selectedBJets_DRCut_BWPs_PtOrdered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BWP::Count, std::vector<uint8_t>())),
-            selectedBJets_DRCut_BWPs_CSVv2Ordered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BWP::Count, std::vector<uint8_t>())),
-            diJets_DRCut(LepLepID::Count, std::vector<uint8_t>()),
-            diBJets_DRCut_BBWPs_PtOrdered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
-            diBJets_DRCut_BBWPs_CSVv2Ordered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
-            diLepDiJets_DRCut(LepLepID::Count, std::vector<uint8_t>()),
-            diLepDiBJets_DRCut_BBWPs_PtOrdered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
-            diLepDiBJets_DRCut_BBWPs_CSVv2Ordered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
-            
             m_electronPtCut( config.getUntrackedParameter<double>("electronPtCut", 20) ),
             m_electronEtaCut( config.getUntrackedParameter<double>("electronEtaCut", 2.5) ),
             m_electronVetoIDName( config.getUntrackedParameter<std::string>("electronVetoIDName") ),
             m_electronLooseIDName( config.getUntrackedParameter<std::string>("electronLooseIDName") ),
             m_electronMediumIDName( config.getUntrackedParameter<std::string>("electronMediumIDName") ),
             m_electronTightIDName( config.getUntrackedParameter<std::string>("electronTightIDName") ),
-            m_electronSelectedIDName( config.getUntrackedParameter<std::string>("electronSelectedIDName") ),
             
             m_muonPtCut( config.getUntrackedParameter<double>("muonPtCut", 20) ),
             m_muonEtaCut( config.getUntrackedParameter<double>("muonEtaCut", 2.4) ),
@@ -46,7 +33,7 @@ class TTAnalyzer: public Framework::Analyzer {
             
             m_jetPtCut( config.getUntrackedParameter<double>("jetPtCut", 30) ),
             m_jetEtaCut( config.getUntrackedParameter<double>("jetEtaCut", 2.5) ),
-            m_jetPUID( config.getUntrackedParameter<double>("jetPUID", std::numeric_limits<float>::min()) ),
+            m_jetPUID( config.getUntrackedParameter<double>("jetPUID") ),
             m_jetDRleptonCut( config.getUntrackedParameter<double>("jetDRleptonCut", 0.3) ),
             m_jetID( config.getUntrackedParameter<std::string>("jetID", "tight") ),
             m_jetCSVv2Name( config.getUntrackedParameter<std::string>("jetCSVv2Name") ),
@@ -54,8 +41,8 @@ class TTAnalyzer: public Framework::Analyzer {
             m_jetCSVv2M( config.getUntrackedParameter<double>("jetCSVv2M", 0.89) ),
             m_jetCSVv2T( config.getUntrackedParameter<double>("jetCSVv2T", 0.97) ),
             
-            m_hltDRCut( config.getUntrackedParameter<double>("hltDrCut", std::numeric_limits<float>::max()) ),
-            m_hltPtCut( config.getUntrackedParameter<double>("hltPtCut", std::numeric_limits<float>::max()) )
+            m_hltDRCut( config.getUntrackedParameter<double>("hltDRCut") ),
+            m_hltPtCut( config.getUntrackedParameter<double>("hltPtCut") )
         {
         }
 
@@ -78,31 +65,33 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(selectedJets, std::vector<uint8_t>); // all following indices point to jets producer's array
         BRANCH(selectedJets_tightID, std::vector<uint8_t>);
         // ex.: selectedJets_..._PtOrdered[LepLepID::TT][0] is the highest Pt selected jet with minDRjl>0.3 taking into account TT DiLeptons
-        BRANCHNOCLEAR(selectedJets_tightID_DRcut, std::vector<std::vector<uint8_t>>);
+        BRANCHNOCLEAR(selectedJets_tightID_DRCut, std::vector<std::vector<uint8_t>>);
         // ex.: selectedBJets_..._PtOrdered[LepLepID::TT][BWP::M][0] is the highest Pt selected medium b-jet with minDRjl>0.3 taking into account TT DiLeptons
         BRANCHNOCLEAR(selectedBJets_DRCut_BWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
         BRANCHNOCLEAR(selectedBJets_DRCut_BWPs_CSVv2Ordered, std::vector<std::vector<std::vector<uint8_t>>>);
 
-        BRANCH(diJets, std::vector<DiJet>);
+        BRANCH(diJets, std::vector<TTAnalysis::DiJet>);
         // ex.: diJets_DRCut[LepLepID::TT][0] is first diJet with minDRjl>0.3 taking into account TT DiLeptons
-        BRANCHNOCLEAR(diJets_DRCut, std::vector<<std::vector<uint8_t>>); 
+        BRANCHNOCLEAR(diJets_DRCut, std::vector<std::vector<uint8_t>>); 
         // ex.: diBJets_..._CSVv2Ordered[LepLepID::TT][BBWP::MM][0] is the b-jet pair with 2 medium b-jets with highest CSVv2 values and with minDRjl>0.3 taking into account TT DiLeptons
         BRANCHNOCLEAR(diBJets_DRCut_BBWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
         BRANCHNOCLEAR(diBJets_DRCut_BBWPs_CSVv2Ordered, std::vector<std::vector<std::vector<uint8_t>>>);
 
-        BRANCH(diLepDiJets, std::vector<DiLepDiJet>);
+        BRANCH(diLepDiJets, std::vector<TTAnalysis::DiLepDiJet>);
         // ex.: diLepDiJets_DRCut[LepLepID::TT][0] is first di-lepton-di-jet with TT leptons and with minDRjl>0.3
-        BRANCHNOCLEAR(diLepDiJets_DRCut, std::vector<<std::vector<uint8_t>>); 
+        BRANCHNOCLEAR(diLepDiJets_DRCut, std::vector<std::vector<uint8_t>>); 
         // ex.: diLepDiBJets_..._CSVv2Ordered[LepLepID::TT][BBWP::MM][0] is the di-lepton-di-b-jet pair with 2 tight leptons and 2 medium b-jets with highest CSVv2 values and minDRjl>0.3
         BRANCHNOCLEAR(diLepDiBJets_DRCut_BBWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
         BRANCHNOCLEAR(diLepDiBJets_DRCut_BBWPs_CSVv2Ordered, std::vector<std::vector<std::vector<uint8_t>>>);
 
-        BRANCH(diLepDiJetsMet, std::vector<DiLepDiJetMet>);
-        BRANCHNOCLEAR(diLepDiJetsMet_DRCut, std::vector<<std::vector<uint8_t>>); 
-        BRANCHNOCLEAR(diLepDiJetsMetNoHF_DRCut, std::vector<<std::vector<uint8_t>>); 
+        BRANCH(diLepDiJetsMet, std::vector<TTAnalysis::DiLepDiJetMet>);
+        
+        BRANCHNOCLEAR(diLepDiJetsMet_DRCut, std::vector<std::vector<uint8_t>>); 
         BRANCHNOCLEAR(diLepDiBJetsMet_DRCut_BBWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
-        BRANCHNOCLEAR(diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
         BRANCHNOCLEAR(diLepDiBJetsMet_DRCut_BBWPs_CSVv2Ordered, std::vector<std::vector<std::vector<uint8_t>>>);
+        
+        BRANCHNOCLEAR(diLepDiJetsMetNoHF_DRCut, std::vector<std::vector<uint8_t>>); 
+        BRANCHNOCLEAR(diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
         BRANCHNOCLEAR(diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered, std::vector<std::vector<std::vector<uint8_t>>>);
 
     private:

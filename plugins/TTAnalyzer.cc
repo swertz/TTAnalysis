@@ -9,37 +9,39 @@
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
 #include <cp3_llbb/Framework/interface/METProducer.h>
 
+#include <Math/PtEtaPhiE4D.h>
+#include <Math/LorentzVector.h>
+#include <Math/VectorUtil.h>
+
 // To access VectorUtil::DeltaR() more easily
 using namespace ROOT::Math;
 
 using namespace TTAnalysis;
 
 void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const CategoryManager& categories) {
-  // Needed since these branches are not reset automatically by TreeWrapper
-  for(const LepLepID::LepLepID &id){
+  
+  // Initizalize vectors depending on IDs/WPs to the right lengths
+
+  diLeptons_LepIDs.resize(LepLepID::Count);
+  selectedJets_tightID_DRCut.resize(LepLepID::Count);
+  diJets_DRCut.resize(LepLepID::Count);
+  diLepDiJets_DRCut.resize(LepLepID::Count);
+  diLepDiJetsMet_DRCut.resize(LepLepID::Count);
+  diLepDiJetsMetNoHF_DRCut.resize(LepLepID::Count);
+  
+  for(const LepLepID::LepLepID &id: LepLepID::it){
     
-    diLeptons_LepIDs[id].clear();
-    selectedJets_tightID_DRCut[id].clear();
-    diJets_DRCut[id].clear();
-    diLepDiJets_DRcut[id].clear();
-    diLepDiJetsMet_DRcut[id].clear();
-    diLepDiJetsMetNoHF_DRcut[id].clear();
+    selectedBJets_DRCut_BWPs_PtOrdered[id].resize(BWP::Count);
+    selectedBJets_DRCut_BWPs_CSVv2Ordered[id].resize(BWP::Count);
     
-    for(const BWP::BWP& wp){
-      selectedBJets_DRCut_BWPs_PtOrdered[id][wp].clear();
-      selectedBJets_DRCut_BWPs_CSVv2Ordered[id][wp].clear();
-    }
-    
-    for(const BBWP::BBWP& wp){
-      diBJets_DRCut_BBWPs_PtOrdered[id][wp].clear();
-      diBJets_DRCut_BBWPs_CSVv2Ordered[id][wp].clear();
-      diLepDiBJets_DRCut_BBWPs_PtOrdered[id][wp].clear();
-      diLepDiBJets_DRCut_BBWPs_CSVv2Ordered[id][wp].clear();
-      diLepDiBJetsMet_DRCut_BBWPs_PtOrdered[id][wp].clear();
-      diLepDiBJetsMet_DRCut_BBWPs_CSVv2Ordered[id][wp].clear();
-      diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered[id][wp].clear();
-      diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered[id][wp].clear();
-    }
+    diBJets_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
+    diBJets_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
+    diLepDiBJets_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
+    diLepDiBJets_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
+    diLepDiBJetsMet_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
+    diLepDiBJetsMet_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
+    diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
+    diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
   }
 
   ///////////////////////////
@@ -53,9 +55,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       
       leptons.push_back( 
         Lepton(
-          electron.p4[ielectron], 
+          electrons.p4[ielectron], 
           ielectron, 
-          electron.charge[ielectron], 
+          electrons.charge[ielectron], 
           true, false,
           electrons.ids[ielectron][m_electronLooseIDName],
           electrons.ids[ielectron][m_electronMediumIDName],
@@ -86,9 +88,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       
       leptons.push_back(
         Lepton(
-          muon.p4[imuon], 
+          muons.p4[imuon], 
           imuon,
-          muon.charge[imuon], 
+          muons.charge[imuon], 
           false, true,
           muons.isLoose[imuon],
           muons.isMedium[imuon],
@@ -117,11 +119,11 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       const Lepton& l1 = leptons[i1];
       const Lepton& l2 = leptons[i2];
 
-      DiLepton m_diLepton();
+      DiLepton m_diLepton;
 
       m_diLepton.p4 = l1.p4 + l2.p4; 
-      m_diLepton.idxs = std::make_pair(l1.idx; l2.idx); 
-      m_diLepton.lidxs = std::make_pair(i1; i2); 
+      m_diLepton.idxs = std::make_pair(l1.idx, l2.idx); 
+      m_diLepton.lidxs = std::make_pair(i1, i2); 
       m_diLepton.isElEl = l1.isEl && l2.isEl;
       m_diLepton.isElMu = l1.isEl && l2.isMu;
       m_diLepton.isMuEl = l1.isMu && l2.isEl;
@@ -137,16 +139,16 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       m_diLepton.lepIDs[LepLepID::MT] = l1.lepID[LepID::M] && l2.lepID[LepID::T];
       m_diLepton.lepIDs[LepLepID::TM] = l1.lepID[LepID::T] && l2.lepID[LepID::M];
       m_diLepton.lepIDs[LepLepID::TT] = l1.lepID[LepID::T] && l2.lepID[LepID::T];
-      m_diLepton.DR = VectorUtil::DeltaR(l1.p4; l2.p4);
-      m_diLepton.DEta = TTAnalysis::DeltaEta(l1.p4; l2.p4);
-      m_diLepton.DPhi = VectorUtil::DeltaPhi(l1.p4; l2.p4);
+      m_diLepton.DR = VectorUtil::DeltaR(l1.p4, l2.p4);
+      m_diLepton.DEta = TTAnalysis::DeltaEta(l1.p4, l2.p4);
+      m_diLepton.DPhi = VectorUtil::DeltaPhi(l1.p4, l2.p4);
 
       diLeptons.push_back(m_diLepton);
     }
   }
 
   for(uint8_t i = 0; i < diLeptons.size(); i++){
-    const diLepton& m_diLepton = diLeptons[i];
+    const DiLepton& m_diLepton = diLeptons[i];
     
     for(const LepLepID::LepLepID& id: LepLepID::it){
       if(m_diLepton.lepIDs[id])
@@ -175,15 +177,15 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
         
         // Save the jets that pass the kinematic cuts and tight jetID and DR(l,j)>cut using selected leptons, for each DiLepton ID pair
         for(const LepLepID::LepLepID& id: LepLepID::it){
-          bool passDRcut(true);
+          bool passDRCut(true);
           for(const DiLepton& m_diLepton: diLeptons){
-            if( m_diLepton.lepIDs[id] && min(VectorUtil::DeltaR(jets.p4[ijet], leptons[m_diLepton.lidxs.first].p4), VectorUtil::DeltaR(jets.p4[ijet], leptons[m_diLepton.lidxs.second].p4)) < m_jetDRleptonCut ){
-              passDRcut[id] = false;
+            if( m_diLepton.lepIDs[id] && std::min(float(VectorUtil::DeltaR(jets.p4[ijet], leptons[m_diLepton.lidxs.first].p4)), float(VectorUtil::DeltaR(jets.p4[ijet], leptons[m_diLepton.lidxs.second].p4))) < m_jetDRleptonCut ){
+              passDRCut = false;
               break;
             }
           }
-          if(passDRcut)
-            selectedJets_tightID_DRcut[id].push_back(ijet);
+          if(passDRCut)
+            selectedJets_tightID_DRCut[id].push_back(ijet);
         }
       } // end selected + tightID
     } // end selected
@@ -196,7 +198,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       const uint8_t jet1 = selectedJets_tightID[j1];
       const uint8_t jet2 = selectedJets_tightID[j2];
 
-      m_diJet = DiJet(); 
+      DiJet m_diJet; 
       m_diJet.p4 = jets.p4[jet1] + jets.p4[jet2];
       m_diJet.idxs = std::make_pair(jet1, jet2);
       
@@ -215,7 +217,12 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       m_diJet.CSVv2_WPs[BBWP::TT] = jets.getBTagDiscriminant(jet1, m_jetCSVv2Name) > m_jetCSVv2T && jets.getBTagDiscriminant(jet2, m_jetCSVv2Name) > m_jetCSVv2T;
       
       for(const auto& m_diLep: diLeptons){
-        const float minDR = std::min( { VectorUtil::DeltaR(jets.p4[ijet1], leptons[m_diLep.lidxs.first].p4), VectorUtil::DeltaR(jets.p4[ijet1], leptons[m_diLep.lidxs.second].p4), VectorUtil::DeltaR(jets.p4[ijet2], leptons[m_diLep.lidxs.first].p4), VectorUtil::DeltaR(jets.p4[ijet2], leptons[m_diLep.lidxs.second].p4) } );
+        const float minDR = std::min( { 
+            float(VectorUtil::DeltaR(jets.p4[jet1], leptons[m_diLep.lidxs.first].p4)), 
+            float(VectorUtil::DeltaR(jets.p4[jet1], leptons[m_diLep.lidxs.second].p4)), 
+            float(VectorUtil::DeltaR(jets.p4[jet2], leptons[m_diLep.lidxs.first].p4)), 
+            float(VectorUtil::DeltaR(jets.p4[jet2], leptons[m_diLep.lidxs.second].p4))
+          } );
         for(const LepLepID::LepLepID& id: LepLepID::it){
           if( minDR < m_diJet.minDRjl_lepIDs[id] && m_diLep.lepIDs[id] )
             m_diJet.minDRjl_lepIDs[id] = minDR;
@@ -230,7 +237,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   // Save the DiJets which have minDRjl>cut, for each leptonID pair
   for(uint8_t i = 0; i < diJets.size(); i++){
     for(const LepLepID::LepLepID& id: LepLepID::it){
-      if(diJets.minDRjl_lepIDs[id] > m_jetDRleptonCut)
+      if(diJets[i].minDRjl_lepIDs[id] > m_jetDRleptonCut)
         diJets_DRCut[id].push_back(i);
     }
   }
@@ -242,8 +249,8 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   // Save b-jets one by one, this time taking into account minDRjl for different DiLepton ID pairs
   // Do it Pt- or CSVv2-ordered
   for(const LepLepID::LepLepID& id: LepLepID::it){
-    for(uint8_t i = 0; i < selectedJets_tightID_DRcut[id].size(); i++){
-      uint8_t ijet = selectedJets_tightID_DRcut[id][i];
+    for(uint8_t i = 0; i < selectedJets_tightID_DRCut[id].size(); i++){
+      uint8_t ijet = selectedJets_tightID_DRCut[id][i];
       if(jets.getBTagDiscriminant(i, m_jetCSVv2Name) > m_jetCSVv2L)
         selectedBJets_DRCut_BWPs_PtOrdered[id][BWP::L].push_back(ijet);
       if(jets.getBTagDiscriminant(i, m_jetCSVv2Name) > m_jetCSVv2M)
@@ -252,7 +259,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
         selectedBJets_DRCut_BWPs_PtOrdered[id][BWP::T].push_back(ijet);
     }
   }
-  selectedBJets_DRCut_BWPs_CSVv2Ordered = selectedBJets_DRCut_PtOrdered;
+  selectedBJets_DRCut_BWPs_CSVv2Ordered = selectedBJets_DRCut_BWPs_PtOrdered;
   for(const LepLepID::LepLepID& id: LepLepID::it){
     for(const BWP::BWP& wp: BWP::it){
       std::sort(selectedBJets_DRCut_BWPs_CSVv2Ordered[id][wp].begin(), selectedBJets_DRCut_BWPs_CSVv2Ordered[id][wp].end(), jetBTagDiscriminantSorter(jets, m_jetCSVv2Name));
@@ -262,7 +269,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   // Save di-b-jets, for each CSVv2 working point pair, taking into account minDRjl for each different DiLepton ID pair
   // Do it Pt- or CSVv2-ordered
   for(uint8_t i = 0; i < diJets.size(); i++){
-    const Dijet& m_diJet = diJets[i];
+    const DiJet& m_diJet = diJets[i];
     for(const LepLepID::LepLepID& id: LepLepID::it){
       for(const BBWP::BBWP& wp: BBWP::it){
         if(m_diJet.CSVv2_WPs[wp] && m_diJet.minDRjl_lepIDs[id] > m_jetDRleptonCut)
@@ -293,40 +300,40 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       DiLepDiJet m_diLepDiJet(m_diLepton, dilep, m_diJet, dijet);
 
       m_diLepDiJet.minDRjl = std::min( {
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.second].p4),
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.second].p4)
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.second])),
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.second]))
           } );
       m_diLepDiJet.maxDRjl = std::max( {
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.second].p4),
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.second].p4)
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.second])),
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaR(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.second]))
           } );
       m_diLepDiJet.minDEtajl = std::min( {
-          DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.first].p4),
-          DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.second].p4),
-          DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.first].p4),
-          DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.second].p4)
+          float(DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.first])),
+          float(DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.second])),
+          float(DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.first])),
+          float(DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.second]))
           } );
       m_diLepDiJet.maxDEtajl = std::max( {
-          DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.first].p4),
-          DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.second].p4),
-          DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.first].p4),
-          DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.second].p4)
+          float(DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.first])),
+          float(DeltaEta(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.second])),
+          float(DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.first])),
+          float(DeltaEta(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.second]))
           } );
       m_diLepDiJet.minDPhijl = std::min( {
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.second].p4),
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.second].p4)
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.second])),
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.second]))
           } );
       m_diLepDiJet.maxDPhijl = std::max( {
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets[m_diJet.idxs.second].p4),
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.first].p4),
-          VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets[m_diJet.idxs.second].p4)
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.first].p4, jets.p4[m_diJet.idxs.second])),
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.first])),
+          float(VectorUtil::DeltaPhi(leptons[m_diLepton.lidxs.second].p4, jets.p4[m_diJet.idxs.second]))
           } );
 
       diLepDiJets.push_back(m_diLepDiJet);
@@ -335,7 +342,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
         if(m_diLepton.lepIDs[id] && m_diLepDiJet.minDRjl > m_jetDRleptonCut){
           diLepDiJets_DRCut[id].push_back(diLepDiJetCounter);
           for(const BBWP::BBWP& wp: BBWP::it){
-            if(m_diBJet.CSVv2_WPs[wp])
+            if(m_diJet.CSVv2_WPs[wp])
               diLepDiBJets_DRCut_BBWPs_PtOrdered[id][wp].push_back(diLepDiJetCounter);
           }
         }
@@ -356,127 +363,127 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
   const METProducer &met = producers.get<METProducer>("met");
   const METProducer &noHFmet = producers.get<METProducer>("nohf_met");
-
+  
   for(uint8_t i = 0; i < diLepDiJets.size(); i++){
     // Using regular MET
     DiLepDiJetMet m_diLepDiJetMet(diLepDiJets[i], i, met.p4);
     
-    m_diLepDiJetMet.minDR_l_Met = std::min( {
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMet.maxDR_l_Met = std::max( {
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMet.minDEta_l_Met = std::min( {
-        DeltaEta(leptons[m_diLepDiJetMet.diLep.lidxs.first].p4, met.p4),
-        DeltaEta(leptons[m_diLepDiJetMet.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMet.maxDEta_l_Met = std::max( {
-        DeltaEta(leptons[m_diLepDiJetMet.diLep.lidxs.first].p4, met.p4),
-        DeltaEta(leptons[m_diLepDiJetMet.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMet.minDPhi_l_Met = std::min( {
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMet.maxDPhi_l_Met = std::max( {
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLep.lidxs.second].p4, met.p4)
-        } );
+    m_diLepDiJetMet.minDR_l_Met = std::min(
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLepton.lidxs.second].p4, met.p4))
+        );
+    m_diLepDiJetMet.maxDR_l_Met = std::max(
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMet.diLepton.lidxs.second].p4, met.p4))
+        );
+    m_diLepDiJetMet.minDEta_l_Met = std::min(
+        DeltaEta(leptons[m_diLepDiJetMet.diLepton.lidxs.first].p4, met.p4),
+        DeltaEta(leptons[m_diLepDiJetMet.diLepton.lidxs.second].p4, met.p4)
+        );
+    m_diLepDiJetMet.maxDEta_l_Met = std::max(
+        DeltaEta(leptons[m_diLepDiJetMet.diLepton.lidxs.first].p4, met.p4),
+        DeltaEta(leptons[m_diLepDiJetMet.diLepton.lidxs.second].p4, met.p4)
+        );
+    m_diLepDiJetMet.minDPhi_l_Met = std::min(
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLepton.lidxs.second].p4, met.p4))
+        );
+    m_diLepDiJetMet.maxDPhi_l_Met = std::max(
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMet.diLepton.lidxs.second].p4, met.p4))
+        );
 
-    m_diLepDiJetMet.minDR_j_Met = std::min( {
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMet.maxDR_j_Met = std::max( {
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMet.minDEta_j_Met = std::min( {
+    m_diLepDiJetMet.minDR_j_Met = std::min(
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4))
+        );
+    m_diLepDiJetMet.maxDR_j_Met = std::max(
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4))
+        );
+    m_diLepDiJetMet.minDEta_j_Met = std::min(
         DeltaEta(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4),
         DeltaEta(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMet.maxDEta_j_Met = std::max( {
+        );
+    m_diLepDiJetMet.maxDEta_j_Met = std::max(
         DeltaEta(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4),
         DeltaEta(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMet.minDPhi_j_Met = std::min( {
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMet.maxDPhi_j_Met = std::max( {
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4)
-        } );
+        );
+    m_diLepDiJetMet.minDPhi_j_Met = std::min(
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4))
+        );
+    m_diLepDiJetMet.maxDPhi_j_Met = std::max(
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMet.diJet.idxs.second], met.p4))
+        );
 
-    diLepDiJetsMet.push_back(DiLepDiJetMet);
+    diLepDiJetsMet.push_back(m_diLepDiJetMet);
 
     // Using noHF MET
     DiLepDiJetMet m_diLepDiJetMetNoHF(diLepDiJets[i], i, noHFmet.p4, true);
     
-    m_diLepDiJetMetNoHF.minDR_l_Met = std::min( {
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMetNoHF.maxDR_l_Met = std::max( {
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMetNoHF.minDEta_l_Met = std::min( {
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.first].p4, met.p4),
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMetNoHF.maxDEta_l_Met = std::max( {
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.first].p4, met.p4),
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMetNoHF.minDPhi_l_Met = std::min( {
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.second].p4, met.p4)
-        } );
-    m_diLepDiJetMetNoHF.maxDPhi_l_Met = std::max( {
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.first].p4, met.p4),
-        VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLep.lidxs.second].p4, met.p4)
-        } );
+    m_diLepDiJetMetNoHF.minDR_l_Met = std::min(
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.second].p4, met.p4))
+        );
+    m_diLepDiJetMetNoHF.maxDR_l_Met = std::max(
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.second].p4, met.p4))
+        );
+    m_diLepDiJetMetNoHF.minDEta_l_Met = std::min(
+        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.first].p4, met.p4),
+        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.second].p4, met.p4)
+        );
+    m_diLepDiJetMetNoHF.maxDEta_l_Met = std::max(
+        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.first].p4, met.p4),
+        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.second].p4, met.p4)
+        );
+    m_diLepDiJetMetNoHF.minDPhi_l_Met = std::min(
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.second].p4, met.p4))
+        );
+    m_diLepDiJetMetNoHF.maxDPhi_l_Met = std::max(
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.first].p4, met.p4)),
+        float(VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton.lidxs.second].p4, met.p4))
+        );
 
-    m_diLepDiJetMetNoHF.minDR_j_Met = std::min( {
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMetNoHF.maxDR_j_Met = std::max( {
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMetNoHF.minDEta_j_Met = std::min( {
+    m_diLepDiJetMetNoHF.minDR_j_Met = std::min(
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4))
+        );
+    m_diLepDiJetMetNoHF.maxDR_j_Met = std::max(
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaR(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4))
+        );
+    m_diLepDiJetMetNoHF.minDEta_j_Met = std::min(
         DeltaEta(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4),
         DeltaEta(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMetNoHF.maxDEta_j_Met = std::max( {
+        );
+    m_diLepDiJetMetNoHF.maxDEta_j_Met = std::max(
         DeltaEta(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4),
         DeltaEta(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMetNoHF.minDPhi_j_Met = std::min( {
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4)
-        } );
-    m_diLepDiJetMetNoHF.maxDPhi_j_Met = std::max( {
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4),
-        VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4)
-        } );
+        );
+    m_diLepDiJetMetNoHF.minDPhi_j_Met = std::min(
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4))
+        );
+    m_diLepDiJetMetNoHF.maxDPhi_j_Met = std::max(
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.first], met.p4)),
+        float(VectorUtil::DeltaPhi(jets.p4[m_diLepDiJetMetNoHF.diJet.idxs.second], met.p4))
+        );
 
-    diLepDiJetsMetNoHF.push_back(m_diLepDiJetMetNoHF);
-    
+    diLepDiJetsMet.push_back(m_diLepDiJetMetNoHF);
+     
     for(const LepLepID::LepLepID& id: LepLepID::it){
-      if(m_diLepDiJetMet.diLepton.lepIDs[id] && m_diLepDiJetMet.diJet.minDRjl > m_jetDRleptonCut){
+      if(m_diLepDiJetMet.diLepton.lepIDs[id] && m_diLepDiJetMet.diJet.minDRjl_lepIDs[id] > m_jetDRleptonCut){
         diLepDiJetsMet_DRCut[id].push_back(i);
         for(const BBWP::BBWP& wp: BBWP::it){
           if(m_diLepDiJetMet.diJet.CSVv2_WPs[wp])
             diLepDiBJetsMet_DRCut_BBWPs_PtOrdered[id][wp].push_back(i);
         }
       }
-      if(m_diLepDiJetMetNoF.diLepton.lepIDs[id] && m_diLepDiJetMetNoHF.diJet.minDRjl > m_jetDRleptonCut){
+      if(m_diLepDiJetMetNoHF.diLepton.lepIDs[id] && m_diLepDiJetMetNoHF.diJet.minDRjl_lepIDs[id] > m_jetDRleptonCut){
         diLepDiJetsMetNoHF_DRCut[id].push_back(i);
         for(const BBWP::BBWP& wp: BBWP::it){
           if(m_diLepDiJetMetNoHF.diJet.CSVv2_WPs[wp])
@@ -495,7 +502,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered = diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered; 
   for(const LepLepID::LepLepID& id: LepLepID::it){
     for(const BBWP::BBWP& wp: BBWP::it)
-      std::sort(diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered[id][wp].begin(), diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered[id][wp].end(), diJetBTagDiscriminantSorter(jets, m_jetCSVv2Name, diLepDiJetsMetNoHF));
+      std::sort(diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered[id][wp].begin(), diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered[id][wp].end(), diJetBTagDiscriminantSorter(jets, m_jetCSVv2Name, diLepDiJetsMet));
   }
 
   ///////////////////////////

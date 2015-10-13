@@ -1,13 +1,10 @@
-#pragma once
+#ifndef __TOOLS_H_
+#define __TOOLS_H_
 
 #include <cp3_llbb/TTAnalysis/interface/Types.h>
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
 
 namespace TTAnalysis {
-
-  inline float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2){
-    return abs(v1.Eta() - v2.Eta());
-  }
   
   // Used by std::sort to sort jets according to decreasing b-tagging discriminant value
   class jetBTagDiscriminantSorter {
@@ -41,15 +38,19 @@ namespace TTAnalysis {
 
       // Or work on vectors containing indices pointing to jets themselves
       // 1) Using DiJets
-      diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiJet>& diJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(diJets), m_diLepDiJets(std::vector<DiLepDiJets>()) {}
+      diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiJet>& diJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(&diJets), m_diLepDiJets(nullptr), m_diLepDiJetsMet(nullptr) {}
       // 2) Using DiLepDiJets
-      diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiLepDiJet>& diLepDiJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(std::vector<DiJet>()), m_diLepJets(diLepDiJets) {}
+      diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiLepDiJet>& diLepDiJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(nullptr), m_diLepDiJets(&diLepDiJets), m_diLepDiJetsMet(nullptr) {}
+      // 2) Using DiLepDiJetsMet
+      diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiLepDiJetMet>& diLepDiJetsMet):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(nullptr), m_diLepDiJets(nullptr), m_diLepDiJetsMet(&diLepDiJetsMet) {}
       
       bool operator()(const int idx1, const int idx2){
-        if(m_diJets.size() >= 0){
-          return ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.second, m_taggerName) );
-        }else if(m_diLepDiJets.size() >= 0){
-          return ( m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx1].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx1].diJet.idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx2].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx2].diJet.idxs.second, m_taggerName) );
+        if(m_diJets){
+          return ( m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx1].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx1].idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx2].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx2].idxs.second, m_taggerName) );
+        }else if(m_diLepDiJets){
+          return ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx1].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx1].diJet.idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx2].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx2].diJet.idxs.second, m_taggerName) );
+        }else if(m_diLepDiJetsMet){
+          return ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx1].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx1].diJet.idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx2].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx2].diJet.idxs.second, m_taggerName) );
         }else{
           return false;
         }
@@ -59,6 +60,11 @@ namespace TTAnalysis {
   
       const JetsProducer& m_jetsProducer;
       const std::string m_taggerName;
-      const std::vector<DiJet>& m_diJets; 
-      const std::vector<DiLepDiJet>& m_diLepDiJets; 
+      const std::vector<DiJet>* m_diJets; 
+      const std::vector<DiLepDiJet>* m_diLepDiJets; 
+      const std::vector<DiLepDiJetMet>* m_diLepDiJetsMet; 
   };
+
+}
+
+#endif
