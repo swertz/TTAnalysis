@@ -16,13 +16,17 @@ class TTAnalyzer: public Framework::Analyzer {
         TTAnalyzer(const std::string& name, const ROOT::TreeGroup& tree_, const edm::ParameterSet& config):
             Analyzer(name, tree_, config),
             
-            diLeptons_LepIDs(size_t(LepLepID::Count), std::vector<uint8_t>()),
-            diJets_LepDRCut(size_t(LepLepID::Count), std::vector<uint8_t>()),
-            selectedJets_tightID_DRCut(size_t(LepLepID::Count), std::vector<uint8_t>()),
-            selectedBJets_DRCut_BWPs_PtOrdered(size_t(LepLepID::Count), std::vector<std::vector<uint8_t>>(size_t(BWP::Count), std::vector<uint8_t>())),
-            selectedBJets_DRCut_BWPs_CSVv2Ordered(size_t(LepLepID::Count), std::vector<std::vector<uint8_t>>(size_t(BWP::Count), std::vector<uint8_t>())),
-            diBJets_LepDRCut_BBWPs_PtOrdered(size_t(LepLepID::Count), std::vector<std::vector<uint8_t>>(size_t(BBWP::Count), std::vector<uint8_t>())),
-            diBJets_LepDRCut_BBWPs_CSVv2Ordered(size_t(LepLepID::Count), std::vector<std::vector<uint8_t>>(size_t(BBWP::Count), std::vector<uint8_t>())),
+            diLeptons_LepIDs(LepLepID::Count, std::vector<uint8_t>()),
+            diJets_DRCut(LepLepID::Count, std::vector<uint8_t>()),
+            selectedJets_tightID_DRCut(LepLepID::Count, std::vector<uint8_t>()),
+            selectedBJets_DRCut_BWPs_PtOrdered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BWP::Count, std::vector<uint8_t>())),
+            selectedBJets_DRCut_BWPs_CSVv2Ordered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BWP::Count, std::vector<uint8_t>())),
+            diJets_DRCut(LepLepID::Count, std::vector<uint8_t>()),
+            diBJets_DRCut_BBWPs_PtOrdered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
+            diBJets_DRCut_BBWPs_CSVv2Ordered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
+            diLepDiJets_DRCut(LepLepID::Count, std::vector<uint8_t>()),
+            diLepDiBJets_DRCut_BBWPs_PtOrdered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
+            diLepDiBJets_DRCut_BBWPs_CSVv2Ordered(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count, std::vector<uint8_t>())),
             
             m_electronPtCut( config.getUntrackedParameter<double>("electronPtCut", 20) ),
             m_electronEtaCut( config.getUntrackedParameter<double>("electronEtaCut", 2.5) ),
@@ -68,18 +72,9 @@ class TTAnalyzer: public Framework::Analyzer {
 
         BRANCH(leptons, std::vector<TTAnalysis::Lepton>);
         BRANCH(diLeptons, std::vector<TTAnalysis::DiLepton>);
-        /*BRANCH(diLeptons_LL, std::vector<uint8_t>)
-        BRANCH(diLeptons_LM, std::vector<uint8_t>)
-        BRANCH(diLeptons_ML, std::vector<uint8_t>)
-        BRANCH(diLeptons_LT, std::vector<uint8_t>)
-        BRANCH(diLeptons_TL, std::vector<uint8_t>)
-        BRANCH(diLeptons_MM, std::vector<uint8_t>)
-        BRANCH(diLeptons_MT, std::vector<uint8_t>)
-        BRANCH(diLeptons_TM, std::vector<uint8_t>)
-        BRANCH(diLeptons_TT, std::vector<uint8_t>)*/
         BRANCH(diLeptons_LepIDs, std::vector<std::vector<uint8_t>>);
 
-        BRANCH(selectedJets, std::vector<uint8_t>); // all following indices point to jets array
+        BRANCH(selectedJets, std::vector<uint8_t>); // all following indices point to jets producer's array
         BRANCH(selectedJets_tightID, std::vector<uint8_t>);
         // ex.: selectedJets_..._PtOrdered[LepLepID::TT][0] is the highest Pt selected jet with minDRjl>0.3 taking into account TT DiLeptons
         BRANCH(selectedJets_tightID_DRcut, std::vector<std::vector<uint8_t>>);
@@ -91,24 +86,18 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(selectedNonBJets_CSVv2T, std::vector<uint8_t>);*/
 
         BRANCH(diJets, std::vector<DiJet>);
-        // ex.: diJets_DRCut[LepLepID::TT][0] is first diJet with minDRjl>0.3 taking into account TT DiLeptons;
+        // ex.: diJets_DRCut[LepLepID::TT][0] is first diJet with minDRjl>0.3 taking into account TT DiLeptons
         BRANCH(diJets_DRCut, std::vector<<std::vector<uint8_t>>); 
         // ex.: diBJets_..._CSVv2Ordered[LepLepID::TT][BBWP::MM][0] is the b-jet pair with 2 medium b-jets with highest CSVv2 values and with minDRjl>0.3 taking into account TT DiLeptons
         BRANCH(diBJets_DRCut_BBWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
         BRANCH(diBJets_DRCut_BBWPs_CSVv2Ordered, std::vector<std::vector<std::vector<uint8_t>>>);
 
-        BRANCH(ll_jj_p4, myLorentzVector);
-        BRANCH(ll_jj_DR, float);
-        BRANCH(ll_jj_DPhi, float);
-        BRANCH(ll_jj_DEta, float);
-        BRANCH(lj_minDR, float);
-        BRANCH(lj_noDRcut_minDR, float);
-
-        BRANCH(ll_bb_p4, std::map<std::string, myLorentzVector>);
-        BRANCH(ll_bb_DR, std::map<std::string, float>);
-        BRANCH(ll_bb_DPhi, std::map<std::string, float>);
-        BRANCH(ll_bb_DEta, std::map<std::string, float>);
-        BRANCH(lb_minDR, std::map<std::string, float>);
+        BRANCH(diLepDiJets, std::vector<DiLepDiJet>);
+        // ex.: diLepDiJets_DRCut[LepLepID::TT][0] is first di-lepton-di-jet with TT leptons and with minDRjl>0.3
+        BRANCH(diLepDiJets_DRCut, std::vector<<std::vector<uint8_t>>); 
+        // ex.: diLepDiBJets_..._CSVv2Ordered[LepLepID::TT][BBWP::MM][0] is the di-lepton-di-b-jet pair with 2 tight leptons and 2 medium b-jets with highest CSVv2 values and minDRjl>0.3
+        BRANCH(diLepDiBJets_DRCut_BBWPs_PtOrdered, std::vector<std::vector<std::vector<uint8_t>>>);
+        BRANCH(diLepDiBJets_DRCut_BBWPs_CSVv2Ordered, std::vector<std::vector<std::vector<uint8_t>>>);
 
         BRANCH(ll_jj_pfMET_p4, myLorentzVector);
         BRANCH(ll_pfMET_DPhi, float);

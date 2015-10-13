@@ -16,30 +16,37 @@
 
 namespace TTAnalysis{
 
-  enum class LepID{ L, M, T, V, Count };
-  // Ugly way to allow iterating over all items in the enumeration:
-  const std::array<LepID, size_t(LepID::Count)> allLepID = { LepID::L, LepID::M, LepID::T, LepID::V };
+  namespace LepID{
+    enum LepID{ L, M, T, V, Count };
+    // Ugly way to allow iterating over all items in the enumeration ( for(const LepID::LepID& id: LepID::it) )
+    const std::array<LepID, Count> it = { L, M, T, V };
+  }
   
-  enum class LepLepID{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
-  const std::array<LepLepID, size_t(LepLepID::Count)> allLepLepID{ LepLepID::LL, LepLepID::LM, LepLepID::ML, LepLepID::LT, LepLepID::TL, LepLepID::MM, LepLepID::MT, LepLepID::TM, LepLepID::TT };
+  namespace LepLepID{
+    enum LepLepID{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
+    const std::array<LepLepID, Count> it = { LL, LM, ML, LT, TL, MM, MT, TM, TT };
+  }
   
-  enum class JetID{ L, T, TLV, Count };
+  namespace JetID{
+    enum JetID{ L, T, TLV, Count };
+    const std::array<JetID, Count> it = { L, T, TLV };
+  }
   
-  enum class BWP{ L, M, T, Count };
-  const std::array<BWP, size_t(BWP::Count)> allBWP{ BWP::L, BWP::M, BWP::T };
+  namespace BWP{
+    enum BWP{ L, M, T, Count };
+    const std::array<BWP, Count> it = { L, M, T };
+  }
   
-  enum class BBWP{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
-  const std::array<BBWP, size_t(BBWP::Count)> allBBWP{ BBWP::LL, BBWP::LM, BBWP::ML, BBWP::LT, BBWP::TL, BBWP::MM, BBWP::MT, BBWP::TM, BBWP::TT };
+  namespace BBWP{
+    enum BBWP{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
+    const std::array<BBWP, Count> it = { LL, LM, ML, LT, TL, MM, MT, TM, TT };
+  }
 
   struct BaseObject {
     BaseObject(myLorentzVector p4): p4(p4) {}
     BaseObject() {}
 
     myLorentzVector p4;
-
-    virtual void clear(){
-      p4.SetCoordinates(0,0,0,0);
-    }  
   };
 
   struct Lepton: BaseObject {
@@ -51,6 +58,8 @@ namespace TTAnalysis{
         lepID.push_back(isTight);
         if(isEl)
           lepID.push_back(isVeto);
+        else
+          lepID.push_back(false);
       }
     Lepton() {}
     
@@ -84,7 +93,7 @@ namespace TTAnalysis{
       {}
     
     std::pair<int, int> idxs; // stores indices to jets array
-    //std::pair<int, int> jidxs; // stores indices to TTAnalysis::Jet array
+    //std::pair<int, int> jidxs; // stores indices to TTAnalysis::Jet array (NOT implemented... necessary??)
     float minDRjl_lepIDs;
     std::vector<bool> CSVv2_WPs;
     float DR;
@@ -93,16 +102,17 @@ namespace TTAnalysis{
   };
 
   struct DiLepDiJet: BaseObject {
-    DiLepDiJet(DiLepton diLepton, DiJet diJet):
+    DiLepDiJet(DiLepton diLepton, const int diLepIdx, DiJet diJet, const int diJetIdx):
       diLepton(diLepton),
-      diJet(diJet)
-      {
-        minDRjl = std::min( { 
-            VectorUtil::DeltaR(
-      }
+      diLepIdx(diLepIdx),
+      diJet(diJet),
+      diJetIdx(diJetIxd)
+      {}
 
-    DiLepton diLepton;
-    DiJet diJet;
+    const DiLepton& diLepton;
+    const int diLepIdx;
+    const DiJet& diJet;
+    const int diJetIdx;
 
     float minDRjl, maxDRjl;
     float minDEtajl, maxDEtajl;
