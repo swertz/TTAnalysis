@@ -11,6 +11,8 @@
 
 #include <cp3_llbb/TreeWrapper/interface/Resetter.h>
 
+#define BRANCHNOCLEAR(NAME, ...) __VA_ARGS__& NAME = tree[#NAME].write<__VA_ARGS__>(false)
+
 // Needed because of gcc bug when using typedef and std::map
 #define myLorentzVector ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float>>
 
@@ -102,11 +104,15 @@ namespace TTAnalysis{
   };
 
   struct DiLepDiJet: BaseObject {
-    DiLepDiJet(DiLepton diLepton, const int diLepIdx, DiJet diJet, const int diJetIdx):
+    DiLepDiJet(DiLepton& diLepton, const int diLepIdx, DiJet& diJet, const int diJetIdx):
+      BaseObject(diLepton.p4 + diJet.p4),
       diLepton(diLepton),
       diLepIdx(diLepIdx),
       diJet(diJet),
-      diJetIdx(diJetIxd)
+      diJetIdx(diJetIxd),
+      DR_ll_jj( ROOT::Math::VectorUtil::DeltaR(diLepton.p4, diJet.p4) ),
+      DEta_ll_jj( ROOT::Math::DeltaEta(diLepton.p4, diJet.p4) ),
+      DPhi_ll_jj( ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4, diJet.p4) )
       {}
 
     const DiLepton& diLepton;
@@ -114,7 +120,58 @@ namespace TTAnalysis{
     const DiJet& diJet;
     const int diJetIdx;
 
+    float DR_ll_jj, DEta_ll_jj, DPhi_ll_jj;
+    
     float minDRjl, maxDRjl;
     float minDEtajl, maxDEtajl;
     float minDPhijl, maxDPhijl;
+  };
+
+  struct DiLepDiJetMet: DiLepDiJet {
+    DiLepDiJetMet(DiLepDiJet& diLepDiJet, uint8_t diLepDiJetIdx, LorentzVector& MetP4, bool hasNoHFMet = false):
+      DiLepDiJet(diLepDiJet.diLepton, diLepDiJet.diLepIdx, diLepDiJet.diJet, diLepDiJet.diJetIdx),
+      diLepDiJetIdx(diLepDiJetIdx),
+      minDRjl(DiLepDiJet.minDRjl),
+      maxDRjl(DiLepDiJet.maxDRjl),
+      minDEtajl(DiLepDiJet.minDEtajl),
+      maxDEtajl(DiLepDiJet.maxDEtajl),
+      minDPhijl(DiLepDiJet.minDPhijl),
+      maxDPhijl(DiLepDiJet.maxDPhijl),
+      hasNoHFMet(hasNoHFMet)
+    {
+      p4 += MetP4;
+
+      DR_ll_Met = ROOT::Math::VectorUtil::DeltaR(diLepton.p4, MetP4);
+      DR_jj_Met = ROOT::Math::VectorUtil::DeltaR(diJet.p4, MetP4);
+      
+      DEta_ll_Met = DeltaEta(diLepton.p4, MetP4);
+      DEta_jj_Met = DeltaEta(diJet.p4, MetP4);
+      
+      DPhi_ll_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4, MetP4);
+      DPhi_jj_Met = ROOT::Math::VectorUtil::DeltaPhi(diJet.p4, MetP4);
+      
+      DR_lljj_Met = ROOT::Math::VectorUtil::DeltaR(diLepton.p4 + diJet.p4, MetP4);
+      DEta_lljj_Met = ROOT::Math::DeltaEta(diLepton.p4 + diJet.p4, MetP4);
+      DPhi_lljj_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4 + diJet.p4, MetP4);
+    }
+
+    uint8_t diLepDiJetIdx:
+    bool hasNoHFMet;
+
+    float DR_ll_Met, DR_jj_Met;
+    float DEta_ll_Met, DEta_jj_Met;
+    float DPhi_ll_Met, DPhi_jj_Met;
+
+    float DR_lljj_Met;
+    float DEta_lljj_Met;
+    float DPhi_lljj_Met;
+
+    float minDR_l_Met, minDR_j_Met;
+    float maxDR_l_Met, maxDR_j_Met;
+    float minDEta_l_Met, minDEta_j_Met;
+    float maxDEta_l_Met, maxDEta_j_Met;
+    float minDPhi_l_Met, minDPhi_j_Met;
+    float maxDPhi_l_Met, maxDPhi_j_Met;
+  };
+
 }

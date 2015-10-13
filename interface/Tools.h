@@ -40,11 +40,19 @@ namespace TTAnalysis {
       }
 
       // Or work on vectors containing indices pointing to jets themselves
-  
-      diJetBTagDiscriminantSorterOnIdxs(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiJet>& diJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(diJets) {}
+      // 1) Using DiJets
+      diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiJet>& diJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(diJets), m_diLepDiJets(std::vector<DiLepDiJets>()) {}
+      // 2) Using DiLepDiJets
+      diJetBTagDiscriminantSorter(const JetsProducer& jets, const std::string& taggerName, const std::vector<DiLepDiJet>& diLepDiJets):  m_jetsProducer(jets), m_taggerName(taggerName), m_diJets(std::vector<DiJet>()), m_diLepJets(diLepDiJets) {}
       
       bool operator()(const int idx1, const int idx2){
-        return ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.second, m_taggerName) );
+        if(m_diJets.size() >= 0){
+          return ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx1].idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diJets[idx2].idxs.second, m_taggerName) );
+        }else if(m_diLepDiJets.size() >= 0){
+          return ( m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx1].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx1].diJet.idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx2].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant(m_diLepDiJets[idx2].diJet.idxs.second, m_taggerName) );
+        }else{
+          return false;
+        }
       }
     
     private:
@@ -52,4 +60,5 @@ namespace TTAnalysis {
       const JetsProducer& m_jetsProducer;
       const std::string m_taggerName;
       const std::vector<DiJet>& m_diJets; 
+      const std::vector<DiLepDiJet>& m_diLepDiJets; 
   };
