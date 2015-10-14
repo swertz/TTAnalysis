@@ -15,5 +15,8 @@ namespace {
     std::vector<TTAnalysis::DiLepDiJet> dummy10;
     TTAnalysis::DiLepDiJetMet dummy11;
     std::vector<TTAnalysis::DiLepDiJetMet> dummy12;
+    std::vector<uint8_t> dummy13;
+    std::vector<std::vector<uint8_t>> dummy14;
+    std::vector<std::vector<std::vector<uint8_t>>> dummy15;
   };
 }

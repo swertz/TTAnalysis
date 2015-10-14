@@ -47,9 +47,9 @@ namespace TTAnalysis {
         if(m_diJets){
           return ( m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx1].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx1].idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx2].idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diJets)[idx2].idxs.second, m_taggerName) );
         }else if(m_diLepDiJets){
-          return ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx1].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx1].diJet.idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx2].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx2].diJet.idxs.second, m_taggerName) );
+          return ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx1].diJet->idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx1].diJet->idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx2].diJet->idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJets)[idx2].diJet->idxs.second, m_taggerName) );
         }else if(m_diLepDiJetsMet){
-          return ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx1].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx1].diJet.idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx2].diJet.idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx2].diJet.idxs.second, m_taggerName) );
+          return ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx1].diJet->idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx1].diJet->idxs.second, m_taggerName) ) > ( m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx2].diJet->idxs.first, m_taggerName) + m_jetsProducer.getBTagDiscriminant((*m_diLepDiJetsMet)[idx2].diJet->idxs.second, m_taggerName) );
         }else{
           return false;
         }

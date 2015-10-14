@@ -15,21 +15,19 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             electronLooseIDName = cms.untracked.string('cutBasedElectronID-Spring15-25ns-V1-standalone-loose'),
             electronMediumIDName = cms.untracked.string('cutBasedElectronID-Spring15-25ns-V1-standalone-medium'),
             electronTightIDName = cms.untracked.string('cutBasedElectronID-Spring15-25ns-V1-standalone-tight'),
-            electronSelectedIDName = cms.untracked.string('cutBasedElectronID-Spring15-25ns-V1-standalone-loose'),
             
             muonPtCut = cms.untracked.double(20),
             muonEtaCut = cms.untracked.double(2.4),
             muonBaseIsoCut = cms.untracked.double(.20), # Loose cut recommended for dilepton analysis
-            muonSelectedIsoCut = cms.untracked.double(.20),
-            muonSelectedID = cms.untracked.string('loose'),
 
-            MllBaseCutSF = cms.untracked.double(20), # Mll cut for same-flavour opposite-sign lepton pairs
-            MllBaseCutDF = cms.untracked.double(0), # Mll cut for different-flavour opposite-sign lepton pairs
+            #MllBaseCutSF = cms.untracked.double(20), # Mll cut for same-flavour opposite-sign lepton pairs
+            #MllBaseCutDF = cms.untracked.double(0), # Mll cut for different-flavour opposite-sign lepton pairs
             
             jetPtCut = cms.untracked.double(30),
             jetEtaCut = cms.untracked.double(2.5),
+            jetPUID = cms.untracked.double(-9999999),
             jetDRleptonCut = cms.untracked.double(0.3),
-            jetID = cms.untracked.string('tight'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
+            #jetID = cms.untracked.string('tight'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
             jetCSVv2Name = cms.untracked.string('pfCombinedInclusiveSecondaryVertexV2BJetTags'),
             jetCSVv2L = cms.untracked.double(0.605),
             jetCSVv2M = cms.untracked.double(0.89),
@@ -38,11 +36,11 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             hltDRCut = cms.untracked.double(0.3), # DeltaR cut for trigger matching
             hltPtCut = cms.untracked.double(99999), #Delta(Pt)/Pt cut for trigger matching
             ),
-        categories_parameters = cms.PSet(
-            mll_cut = cms.untracked.double(20),
-            mll_ZVetoCut_low = cms.untracked.double(86),
-            mll_ZVetoCut_high = cms.untracked.double(116)
-            ),
+        #categories_parameters = cms.PSet(
+        #    mll_cut = cms.untracked.double(20),
+        #    mll_ZVetoCut_low = cms.untracked.double(86),
+        #    mll_ZVetoCut_high = cms.untracked.double(116)
+        #    ),
         )
     ), redoJEC=True
     )

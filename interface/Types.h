@@ -50,11 +50,15 @@ namespace TTAnalysis {
   struct BaseObject {
     BaseObject(myLorentzVector p4): p4(p4) {}
     BaseObject() {}
+    virtual ~BaseObject() {}
 
     myLorentzVector p4;
   };
 
   struct Lepton: BaseObject {
+    Lepton():
+      lepID(LepID::Count, false)
+    {}
     Lepton(myLorentzVector p4, uint8_t idx, uint8_t charge, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false):
       BaseObject(p4), idx(idx), charge(charge), isEl(isEl), isMu(isMu)
       {
@@ -66,7 +70,6 @@ namespace TTAnalysis {
         else
           lepID.push_back(false);
       }
-    Lepton() {}
     
     uint8_t idx; // stores index to electron/muon arrays
     uint8_t charge;
@@ -107,21 +110,25 @@ namespace TTAnalysis {
   };
 
   struct DiLepDiJet: BaseObject {
-    DiLepDiJet(const DiLepton& diLepton, const int diLepIdx, const DiJet& diJet, const int diJetIdx):
-      BaseObject(diLepton.p4 + diJet.p4),
-      diLepton(diLepton),
+    DiLepDiJet():
+      diLepton(nullptr),
+      diJet(nullptr)
+      {}
+    DiLepDiJet(const DiLepton& _diLepton, const int diLepIdx, const DiJet& _diJet, const int diJetIdx):
+      BaseObject(_diLepton.p4 + _diJet.p4),
+      diLepton(&_diLepton),
       diLepIdx(diLepIdx),
-      diJet(diJet),
+      diJet(&_diJet),
       diJetIdx(diJetIdx),
-      DR_ll_jj( ROOT::Math::VectorUtil::DeltaR(diLepton.p4, diJet.p4) ),
-      DEta_ll_jj( DeltaEta(diLepton.p4, diJet.p4) ),
-      DPhi_ll_jj( ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4, diJet.p4) )
+      DR_ll_jj( ROOT::Math::VectorUtil::DeltaR(_diLepton.p4, _diJet.p4) ),
+      DEta_ll_jj( DeltaEta(_diLepton.p4, _diJet.p4) ),
+      DPhi_ll_jj( ROOT::Math::VectorUtil::DeltaPhi(_diLepton.p4, _diJet.p4) )
       {}
 
-    const DiLepton& diLepton;
-    const int diLepIdx;
-    const DiJet& diJet;
-    const int diJetIdx;
+    const DiLepton* diLepton;
+    int diLepIdx;
+    const DiJet* diJet;
+    int diJetIdx;
 
     float DR_ll_jj, DEta_ll_jj, DPhi_ll_jj;
     
@@ -131,8 +138,9 @@ namespace TTAnalysis {
   };
 
   struct DiLepDiJetMet: DiLepDiJet {
+    DiLepDiJetMet() {}
     DiLepDiJetMet(const DiLepDiJet& diLepDiJet, uint8_t diLepDiJetIdx, const myLorentzVector& MetP4, bool hasNoHFMet = false):
-      DiLepDiJet(diLepDiJet.diLepton, diLepDiJet.diLepIdx, diLepDiJet.diJet, diLepDiJet.diJetIdx),
+      DiLepDiJet(*diLepDiJet.diLepton, diLepDiJet.diLepIdx, *diLepDiJet.diJet, diLepDiJet.diJetIdx),
       diLepDiJetIdx(diLepDiJetIdx),
       hasNoHFMet(hasNoHFMet)
     {
@@ -145,18 +153,18 @@ namespace TTAnalysis {
       
       p4 += MetP4;
 
-      DR_ll_Met = ROOT::Math::VectorUtil::DeltaR(diLepton.p4, MetP4);
-      DR_jj_Met = ROOT::Math::VectorUtil::DeltaR(diJet.p4, MetP4);
+      DR_ll_Met = ROOT::Math::VectorUtil::DeltaR(diLepton->p4, MetP4);
+      DR_jj_Met = ROOT::Math::VectorUtil::DeltaR(diJet->p4, MetP4);
       
-      DEta_ll_Met = DeltaEta(diLepton.p4, MetP4);
-      DEta_jj_Met = DeltaEta(diJet.p4, MetP4);
+      DEta_ll_Met = DeltaEta(diLepton->p4, MetP4);
+      DEta_jj_Met = DeltaEta(diJet->p4, MetP4);
       
-      DPhi_ll_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4, MetP4);
-      DPhi_jj_Met = ROOT::Math::VectorUtil::DeltaPhi(diJet.p4, MetP4);
+      DPhi_ll_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton->p4, MetP4);
+      DPhi_jj_Met = ROOT::Math::VectorUtil::DeltaPhi(diJet->p4, MetP4);
       
-      DR_lljj_Met = ROOT::Math::VectorUtil::DeltaR(diLepton.p4 + diJet.p4, MetP4);
-      DEta_lljj_Met = DeltaEta(diLepton.p4 + diJet.p4, MetP4);
-      DPhi_lljj_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton.p4 + diJet.p4, MetP4);
+      DR_lljj_Met = ROOT::Math::VectorUtil::DeltaR(diLepton->p4 + diJet->p4, MetP4);
+      DEta_lljj_Met = DeltaEta(diLepton->p4 + diJet->p4, MetP4);
+      DPhi_lljj_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton->p4 + diJet->p4, MetP4);
     }
 
     uint8_t diLepDiJetIdx;
