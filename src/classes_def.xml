@@ -5,7 +5,7 @@
   <class name="std::vector<TTAnalysis::Lepton>"/>
   <class name="TTAnalysis::DiLepton"/>
   <class name="std::vector<TTAnalysis::DiLepton>"/>
-  <class name="TTAnalysis::DiJet">
+  <class name="TTAnalysis::DiJet"/>
   <class name="std::vector<TTAnalysis::DiJet>"/>
   <class name="TTAnalysis::DiLepDiJet">
     <field name="diLepton" transient="true"/>
@@ -16,6 +16,7 @@
     <field name="diLepton" transient="true"/>
     <field name="diJet" transient="true"/>
   </class>
+  <class name="std::vector<TTAnalysis::DiLepDiJetMet>"/>
   <class name="std::vector<uint8_t>"/>
   <class name="std::vector<std::vector<uint8_t>>"/>
   <class name="std::vector<std::vector<std::vector<uint8_t>>>"/>

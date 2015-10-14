@@ -29,21 +29,17 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   diLepDiJetsMet_DRCut.resize(LepLepID::Count);
   diLepDiJetsMetNoHF_DRCut.resize(LepLepID::Count);
   
-  for(const LepLepID::LepLepID &id: LepLepID::it){
-    
-    selectedBJets_DRCut_BWPs_PtOrdered[id].resize(BWP::Count);
-    selectedBJets_DRCut_BWPs_CSVv2Ordered[id].resize(BWP::Count);
-    
-    diBJets_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
-    diBJets_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
-    diLepDiBJets_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
-    diLepDiBJets_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
-    diLepDiBJetsMet_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
-    diLepDiBJetsMet_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
-    diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered[id].resize(BBWP::Count);
-    diLepDiBJetsMetNoHF_DRCut_BBWPs_CSVv2Ordered[id].resize(BBWP::Count);
-  }
-
+  selectedBJets_DRCut_BWPs_PtOrdered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BWP::Count));
+  selectedBJets_DRCut_BWPs_CSVv2Ordered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BWP::Count));
+  
+  diBJets_DRCut_BBWPs_PtOrdered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
+  diBJets_DRCut_BBWPs_CSVv2Ordered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
+  diLepDiBJets_DRCut_BBWPs_PtOrdered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
+  diLepDiBJets_DRCut_BBWPs_CSVv2Ordered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
+  diLepDiBJetsMet_DRCut_BBWPs_PtOrdered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
+  diLepDiBJetsMet_DRCut_BBWPs_CSVv2Ordered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
+  diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
+  
   ///////////////////////////
   //       ELECTRONS       //
   ///////////////////////////

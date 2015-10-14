@@ -1,7 +1,7 @@
 #include <cp3_llbb/TTAnalysis/interface/Types.h>
 #include <vector>
 
-namespace {
+namespace TTAnalysis {
   struct dictionary {
     TTAnalysis::BaseObject dummy;
     std::vector<TTAnalysis::BaseObject> dummy2;
