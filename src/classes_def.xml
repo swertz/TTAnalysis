@@ -1,0 +1,14 @@
+<lcgdict>
+  <class name="TTAnalysis::BaseObject"/> 
+  <class name="std::vector<TTAnalysis::BaseObject>"/>
+  <class name="TTAnalysis::Lepton"/>
+  <class name="std::vector<TTAnalysis::Lepton>"/>
+  <class name="TTAnalysis::DiLepton"/>
+  <class name="std::vector<TTAnalysis::DiLepton>"/>
+  <class name="TTAnalysis::DiJet"/>
+  <class name="std::vector<TTAnalysis::DiJet>"/>
+  <class name="TTAnalysis::DiLepDiJet"/>
+  <class name="std::vector<TTAnalysis::DiLepDiJet>"/>
+  <class name="TTAnalysis::DiLepDiJetMet"/>
+</lcgdict>
+
