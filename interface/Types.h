@@ -73,9 +73,12 @@ namespace TTAnalysis {
     
     uint8_t idx; // stores index to electron/muon arrays
     uint8_t charge;
+    int8_t hlt_idx = -1; // Index to the matched HLT object. -1 if no match
     bool isEl;
     bool isMu;
     std::vector<bool> lepID; // lepton IDs: loose-medium-tight(-veto)
+
+    bool hlt_already_matched = false; // Internal flag; if true, it means this lepton has already been matched to an online object, even if no match has been found.
   };
   
   struct DiLepton: BaseObject {
@@ -85,6 +88,7 @@ namespace TTAnalysis {
     
     std::pair<int, int> idxs; // stores indices to electron/muon arrays
     std::pair<int, int> lidxs; // stores indices to Lepton array
+    std::pair<int8_t, int8_t> hlt_idxs; // Stores indices of matched online objects
     bool isElEl, isElMu, isMuEl, isMuMu;
     bool isOS; // opposite sign
     bool isSF; // same flavour

@@ -8,6 +8,7 @@
 #include <cp3_llbb/Framework/interface/ElectronsProducer.h>
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
 #include <cp3_llbb/Framework/interface/METProducer.h>
+#include <cp3_llbb/Framework/interface/HLTProducer.h>
 
 #include <Math/PtEtaPhiE4D.h>
 #include <Math/LorentzVector.h>
@@ -504,6 +505,93 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   ///////////////////////////
   //       TRIGGER         //
   ///////////////////////////
+
+  if (producers.exists("hlt")) {
+
+#define TT_HLT_DEBUG (false)
+
+      const HLTProducer& hlt = producers.get<HLTProducer>("hlt");
+
+      if (hlt.paths.empty()) {
+#if TT_HLT_DEBUG
+          std::cout << "No HLT path triggered for this event. Skipping HLT matching." << std::endl;
+#endif
+          goto after_hlt_matching;
+      }
+
+#if TT_HLT_DEBUG
+      std::cout << "HLT path triggered for this event:" << std::endl;
+      for (const std::string& path: hlt.paths) {
+          std::cout << "\t" << path << std::endl;
+      }
+#endif
+
+      /*
+       * Try to match `lepton` with an online object, using a deltaR and a deltaPt cut
+       * Returns the index inside the HLTProducer collection, or -1 if no match is found.
+       */
+      auto matchOfflineLepton = [&](Lepton& lepton) {
+
+          if (lepton.hlt_already_matched)
+              return lepton.hlt_idx;
+
+#if TT_HLT_DEBUG
+          std::cout << "Trying to match offline lepton: " << std::endl;
+          std::cout << "\tMuon? " << lepton.isMu << " ; Pt: " << lepton.p4.Pt() << " ; Eta: " << lepton.p4.Eta() << " ; Phi: " << lepton.p4.Phi() << " ; E: " << lepton.p4.E() << std::endl;
+#endif
+
+          float min_dr = std::numeric_limits<float>::max();
+
+          int8_t index = -1;
+          for (size_t hlt_object = 0; hlt_object < hlt.object_p4.size(); hlt_object++) {
+
+              float dr = VectorUtil::DeltaR(lepton.p4, hlt.object_p4[hlt_object]);
+              float dpt_over_pt = std::abs(lepton.p4.Pt() - hlt.object_p4[hlt_object].Pt()) / lepton.p4.Pt();
+
+              if (dr > m_hltDRCut)
+                  continue;
+
+              if (dpt_over_pt > m_hltDPtCut)
+                  continue;
+
+              if (dr < min_dr) {
+                  min_dr = dr;
+                  index = hlt_object;
+              }
+          }
+
+#if TT_HLT_DEBUG
+          if (index != -1) {
+              std::cout << "\033[32mMatched with online object:\033[00m" << std::endl;
+              std::cout << "\tPDG Id: " << hlt.object_pdg_id[index] << " ; Pt: " << hlt.object_p4[index].Pt() << " ; Eta: " << hlt.object_p4[index].Eta() << " ; Phi: " << hlt.object_p4[index].Phi() << " ; E: " << hlt.object_p4[index].E() << std::endl;
+              std::cout << "\tΔR: " << min_dr << " ; ΔPt / Pt: " << std::abs(lepton.p4.Pt() - hlt.object_p4[index].Pt()) / lepton.p4.Pt() << std::endl;
+          } else {
+              std::cout << "\033[31mNo match found\033[00m" << std::endl;
+          }
+#endif
+
+          lepton.hlt_idx = index;
+          lepton.hlt_already_matched = true;
+
+          return index;
+      };
+
+      // Iterate over all dilepton pairs
+      for (const auto& id: LepLepID::it) {
+          for (auto dilepton_index: diLeptons_LepIDs[id]) {
+              DiLepton& dilepton = diLeptons[dilepton_index];
+
+              // For each lepton of this pair, find the online object
+              dilepton.hlt_idxs = std::make_pair(
+                      matchOfflineLepton(leptons[dilepton.lidxs.first]),
+                      matchOfflineLepton(leptons[dilepton.lidxs.second])
+             );
+          }
+      }
+
+  }
+
+after_hlt_matching: ;
 
   ///////////////////////////
   //       GEN INFO        //

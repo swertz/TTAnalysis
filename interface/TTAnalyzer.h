@@ -41,8 +41,8 @@ class TTAnalyzer: public Framework::Analyzer {
             m_jetCSVv2M( config.getUntrackedParameter<double>("jetCSVv2M", 0.89) ),
             m_jetCSVv2T( config.getUntrackedParameter<double>("jetCSVv2T", 0.97) ),
             
-            m_hltDRCut( config.getUntrackedParameter<double>("hltDRCut", std::numeric_limits<float>::min()) ),
-            m_hltPtCut( config.getUntrackedParameter<double>("hltPtCut", std::numeric_limits<float>::min()) )
+            m_hltDRCut( config.getUntrackedParameter<double>("hltDRCut", std::numeric_limits<float>::max()) ),
+            m_hltDPtCut( config.getUntrackedParameter<double>("hltDPtCut", std::numeric_limits<float>::max()) )
         {
         }
 
@@ -110,7 +110,7 @@ class TTAnalyzer: public Framework::Analyzer {
         const std::string m_jetID, m_jetCSVv2Name;
         const float m_jetCSVv2L, m_jetCSVv2M, m_jetCSVv2T;
 
-        const float m_hltDRCut, m_hltPtCut;
+        const float m_hltDRCut, m_hltDPtCut;
 
         static inline bool muonIDAccessor(const MuonsProducer& muons, const uint8_t index, const std::string& muonID){
             if(index >= muons.p4.size())

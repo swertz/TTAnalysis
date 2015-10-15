@@ -1,5 +1,6 @@
 #include <cp3_llbb/TTAnalysis/interface/Types.h>
 #include <vector>
+#include <utility>
 
 namespace TTAnalysis {
   struct dictionary {
@@ -18,5 +19,6 @@ namespace TTAnalysis {
     std::vector<uint8_t> dummy13;
     std::vector<std::vector<uint8_t>> dummy14;
     std::vector<std::vector<std::vector<uint8_t>>> dummy15;
+    std::pair<int8_t, int8_t> dummy16;
   };
 }

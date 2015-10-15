@@ -1,7 +1,9 @@
 <lcgdict>
   <class name="TTAnalysis::BaseObject"/> 
   <class name="std::vector<TTAnalysis::BaseObject>"/>
-  <class name="TTAnalysis::Lepton"/>
+  <class name="TTAnalysis::Lepton">
+    <field name="hlt_already_matched" transient="true"/>
+  </class>
   <class name="std::vector<TTAnalysis::Lepton>"/>
   <class name="TTAnalysis::DiLepton"/>
   <class name="std::vector<TTAnalysis::DiLepton>"/>
@@ -20,5 +22,6 @@
   <class name="std::vector<uint8_t>"/>
   <class name="std::vector<std::vector<uint8_t>>"/>
   <class name="std::vector<std::vector<std::vector<uint8_t>>>"/>
+  <class name="std::pair<int8_t, int8_t>"/>
 </lcgdict>
 
