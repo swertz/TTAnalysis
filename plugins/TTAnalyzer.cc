@@ -2,8 +2,7 @@
 #include <cp3_llbb/TTAnalysis/interface/Tools.h>
 #include <cp3_llbb/TTAnalysis/interface/GenStatusFlags.h>
 #include <cp3_llbb/TTAnalysis/interface/TTAnalyzer.h>
-//#include <cp3_llbb/TTAnalysis/interface/NoZTTDileptonCategories.h>
-//#include <cp3_llbb/TTAnalysis/interface/TTDileptonCategories.h>
+#include <cp3_llbb/TTAnalysis/interface/TTDileptonCategories.h>
 
 #include <cp3_llbb/Framework/interface/MuonsProducer.h>
 #include <cp3_llbb/Framework/interface/ElectronsProducer.h>
@@ -21,9 +20,14 @@ using namespace ROOT::Math;
 
 using namespace TTAnalysis;
 
+float TTAnalysis::DeltaEta(const myLorentzVector& v1, const myLorentzVector& v2){
+  return abs(v1.Eta() - v2.Eta());
+}
+
 void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const CategoryManager& categories) {
   
   // Initizalize vectors depending on IDs/WPs to the right lengths
+  // Only a resize() is needed (and no assign()), since TreeWrapper clears the vectors after each event.
 
   diLeptons_LepIDs.resize(LepLepID::Count);
   selectedJets_tightID_DRCut.resize(LepLepID::Count);
@@ -853,13 +857,10 @@ after_hlt_matching:
 }
 
 void TTAnalyzer::registerCategories(CategoryManager& manager, const edm::ParameterSet& config) {
-  /*manager.new_category<TTMuMuCategory>("mumu", "Category with leading leptons as two muons", config);
-  manager.new_category<TTElElCategory>("elel", "Category with leading leptons as two electrons", config);
-  manager.new_category<TTMuElCategory>("muel", "Category with leading leptons as muon, electron", config);
-  manager.new_category<TTElMuCategory>("elmu", "Category with leading leptons as electron, muon", config);
-  
-  manager.new_category<NoZTTMuMuCategory>("noZmumu", "Category with leading leptons as two muons, excluding the Z peak", config);
-  manager.new_category<NoZTTElElCategory>("noZelel", "Category with leading leptons as two electrons, excluding the Z peak", config);*/
+  manager.new_category<TTAnalysis::ElElCategory>("elel", "Category with leading leptons as two electrons", config);
+  manager.new_category<TTAnalysis::ElMuCategory>("elmu", "Category with leading leptons as electron, muon", config);
+  manager.new_category<TTAnalysis::MuElCategory>("muel", "Category with leading leptons as muon, electron", config);
+  manager.new_category<TTAnalysis::MuMuCategory>("mumu", "Category with leading leptons as two muons", config);
 }
 
 #include <FWCore/PluginManager/interface/PluginFactory.h>

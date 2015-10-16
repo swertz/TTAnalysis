@@ -28,8 +28,6 @@ class TTAnalyzer: public Framework::Analyzer {
             m_muonEtaCut( config.getUntrackedParameter<double>("muonEtaCut", 2.4) ),
             m_muonBaseIsoCut( config.getUntrackedParameter<double>("muonBaseIsoCut", 0.2) ),
             
-            //m_MllBaseCutSF( config.getUntrackedParameter<double>("MllBaseCutSF", 0.) ),
-            //m_MllBaseCutDF( config.getUntrackedParameter<double>("MllBaseCutDF", 0.) ),
             
             m_jetPtCut( config.getUntrackedParameter<double>("jetPtCut", 30) ),
             m_jetEtaCut( config.getUntrackedParameter<double>("jetEtaCut", 2.5) ),
@@ -162,8 +160,6 @@ class TTAnalyzer: public Framework::Analyzer {
         const std::string m_electronTightIDName;
 
         const float m_muonPtCut, m_muonEtaCut, m_muonBaseIsoCut;
-
-        //const float m_MllBaseCutSF, m_MllBaseCutDF;
 
         const float m_jetPtCut, m_jetEtaCut, m_jetPUID, m_jetDRleptonCut;
         const std::string m_jetID, m_jetCSVv2Name;

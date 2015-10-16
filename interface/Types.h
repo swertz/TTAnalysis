@@ -10,41 +10,43 @@
 #include <Math/LorentzVector.h>
 #include <Math/VectorUtil.h>
 
-#include <cp3_llbb/TreeWrapper/interface/Resetter.h>
-
 // Needed because of gcc bug when using typedef and std::map
 #define myLorentzVector ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float>>
 
 namespace TTAnalysis {
 
-  float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2){
-    return abs(v1.Eta() - v2.Eta());
-  }
+  float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2);
   
   namespace LepID{
     enum LepID{ L, M, T, V, Count };
     // Ugly way to allow iterating over all items in the enumeration ( for(const LepID::LepID& id: LepID::it) )
     const std::array<LepID, Count> it = {{ L, M, T, V }};
+    // Is useful in categories to construct cut strings out of each working point
+    const std::map<LepID, std::string> map = { {L, "L"}, {M, "M"}, {T, "T"}, {V, "V"} };
   }
   
   namespace LepLepID{
     enum LepLepID{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
     const std::array<LepLepID, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
+    const std::map<LepLepID, std::string> map = { {LL, "LL"}, {LM, "LM"}, {ML, "ML"}, {LT, "LT"}, {TL, "TL"}, {MM, "MM"}, {MT, "MT"}, {TM, "TM"}, {TT, "TT"} };
   }
   
   namespace JetID{
     enum JetID{ L, T, TLV, Count };
     const std::array<JetID, Count> it = {{ L, T, TLV }};
+    const std::map<JetID, std::string> map = { {L, "L"}, {T, "T"}, {TLV, "TLV"} };
   }
   
   namespace BWP{
     enum BWP{ L, M, T, Count };
     const std::array<BWP, Count> it = {{ L, M, T }};
+    const std::map<BWP, std::string> map = { {L, "L"}, {M, "M"}, {T, "T"} };
   }
   
   namespace BBWP{
     enum BBWP{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
     const std::array<BBWP, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
+    const std::map<BBWP, std::string> map = { {LL, "LL"}, {LM, "LM"}, {ML, "ML"}, {LT, "LT"}, {TL, "TL"}, {MM, "MM"}, {MT, "MT"}, {TM, "TM"}, {TT, "TT"} };
   }
 
     enum TTDecayType {

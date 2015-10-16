@@ -20,12 +20,9 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             muonEtaCut = cms.untracked.double(2.4),
             muonBaseIsoCut = cms.untracked.double(.20), # Loose cut recommended for dilepton analysis
 
-            #MllBaseCutSF = cms.untracked.double(20), # Mll cut for same-flavour opposite-sign lepton pairs
-            #MllBaseCutDF = cms.untracked.double(0), # Mll cut for different-flavour opposite-sign lepton pairs
-            
             jetPtCut = cms.untracked.double(30),
             jetEtaCut = cms.untracked.double(2.5),
-            jetPUID = cms.untracked.double(-9999999),
+            #jetPUID = cms.untracked.double(-9999999),
             jetDRleptonCut = cms.untracked.double(0.3),
             #jetID = cms.untracked.string('tight'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
             jetCSVv2Name = cms.untracked.string('pfCombinedInclusiveSecondaryVertexV2BJetTags'),
@@ -33,14 +30,18 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             jetCSVv2M = cms.untracked.double(0.89),
             jetCSVv2T = cms.untracked.double(0.97),
 
-            hltDRCut = cms.untracked.double(0.3), # DeltaR cut for trigger matching
-            hltPtCut = cms.untracked.double(99999), #Delta(Pt)/Pt cut for trigger matching
+            hltDRCut = cms.untracked.double(0.05), # DeltaR cut for trigger matching
+            hltDPtCut = cms.untracked.double(0.1), #Delta(Pt)/Pt cut for trigger matching
             ),
-        #categories_parameters = cms.PSet(
-        #    mll_cut = cms.untracked.double(20),
-        #    mll_ZVetoCut_low = cms.untracked.double(86),
-        #    mll_ZVetoCut_high = cms.untracked.double(116)
-        #    ),
+        categories_parameters = cms.PSet(
+            MllCutSF = cms.untracked.double(20),
+            MllCutDF = cms.untracked.double(0),
+            MllZVetoCutLow = cms.untracked.double(86),
+            MllZVetoCutHigh = cms.untracked.double(116),
+            HLTDoubleMuon = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v1', 'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v1'),
+            HLTDoubleEG = cms.untracked.vstring('HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v1'),
+            HLTMuonEG = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1', 'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v1'),
+            ),
         )
     ), redoJEC=True
     )
