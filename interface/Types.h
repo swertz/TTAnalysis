@@ -47,6 +47,22 @@ namespace TTAnalysis {
     const std::array<BBWP, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
   }
 
+    enum TTDecayType {
+        NotTT = 0,
+        Hadronic,
+        Semileptonic_e,
+        Semileptonic_mu,
+        Dileptonic_mumu,
+        Dileptonic_ee,
+        Dileptonic_mue,
+
+        // With tau
+        Semileptonic_tau,
+        Dileptonic_tautau,
+        Dileptonic_mutau,
+        Dileptonic_etau
+    };
+
   struct BaseObject {
     BaseObject(myLorentzVector p4): p4(p4) {}
     BaseObject() {}
@@ -73,9 +89,17 @@ namespace TTAnalysis {
     
     uint8_t idx; // stores index to electron/muon arrays
     uint8_t charge;
+    int8_t hlt_idx = -1; // Index to the matched HLT object. -1 if no match
     bool isEl;
     bool isMu;
     std::vector<bool> lepID; // lepton IDs: loose-medium-tight(-veto)
+
+    bool hlt_already_matched = false; // Internal flag; if true, it means this lepton has already been matched to an online object, even if no match has been found.
+
+    int8_t pdg_id() const {
+        int8_t id = (isEl) ? 11 : 13;
+        return charge * id;
+    }
   };
   
   struct DiLepton: BaseObject {
@@ -85,6 +109,7 @@ namespace TTAnalysis {
     
     std::pair<int, int> idxs; // stores indices to electron/muon arrays
     std::pair<int, int> lidxs; // stores indices to Lepton array
+    std::pair<int8_t, int8_t> hlt_idxs; // Stores indices of matched online objects
     bool isElEl, isElMu, isMuEl, isMuMu;
     bool isOS; // opposite sign
     bool isSF; // same flavour

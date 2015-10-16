@@ -1,5 +1,6 @@
 #include <cp3_llbb/TTAnalysis/interface/Types.h>
 #include <cp3_llbb/TTAnalysis/interface/Tools.h>
+#include <cp3_llbb/TTAnalysis/interface/GenStatusFlags.h>
 #include <cp3_llbb/TTAnalysis/interface/TTAnalyzer.h>
 //#include <cp3_llbb/TTAnalysis/interface/NoZTTDileptonCategories.h>
 //#include <cp3_llbb/TTAnalysis/interface/TTDileptonCategories.h>
@@ -8,6 +9,8 @@
 #include <cp3_llbb/Framework/interface/ElectronsProducer.h>
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
 #include <cp3_llbb/Framework/interface/METProducer.h>
+#include <cp3_llbb/Framework/interface/HLTProducer.h>
+#include <cp3_llbb/Framework/interface/GenParticlesProducer.h>
 
 #include <Math/PtEtaPhiE4D.h>
 #include <Math/LorentzVector.h>
@@ -39,7 +42,12 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   diLepDiBJetsMet_DRCut_BBWPs_PtOrdered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
   diLepDiBJetsMet_DRCut_BBWPs_CSVv2Ordered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
   diLepDiBJetsMetNoHF_DRCut_BBWPs_PtOrdered.resize(LepLepID::Count, std::vector<std::vector<uint8_t>>(BBWP::Count));
-  
+
+  gen_matched_b.resize(LepLepID::Count, -1);
+  gen_matched_bbar.resize(LepLepID::Count, -1);
+  gen_b_deltaR.resize(LepLepID::Count);
+  gen_bbar_deltaR.resize(LepLepID::Count);
+
   ///////////////////////////
   //       ELECTRONS       //
   ///////////////////////////
@@ -505,10 +513,343 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   //       TRIGGER         //
   ///////////////////////////
 
-  ///////////////////////////
-  //       GEN INFO        //
-  ///////////////////////////
+  if (producers.exists("hlt")) {
 
+#define TT_HLT_DEBUG (false)
+
+      const HLTProducer& hlt = producers.get<HLTProducer>("hlt");
+
+      if (hlt.paths.empty()) {
+#if TT_HLT_DEBUG
+          std::cout << "No HLT path triggered for this event. Skipping HLT matching." << std::endl;
+#endif
+          goto after_hlt_matching;
+      }
+
+#if TT_HLT_DEBUG
+      std::cout << "HLT path triggered for this event:" << std::endl;
+      for (const std::string& path: hlt.paths) {
+          std::cout << "\t" << path << std::endl;
+      }
+#endif
+
+      /*
+       * Try to match `lepton` with an online object, using a deltaR and a deltaPt cut
+       * Returns the index inside the HLTProducer collection, or -1 if no match is found.
+       */
+      auto matchOfflineLepton = [&](Lepton& lepton) {
+
+          if (lepton.hlt_already_matched)
+              return lepton.hlt_idx;
+
+#if TT_HLT_DEBUG
+          std::cout << "Trying to match offline lepton: " << std::endl;
+          std::cout << "\tMuon? " << lepton.isMu << " ; Pt: " << lepton.p4.Pt() << " ; Eta: " << lepton.p4.Eta() << " ; Phi: " << lepton.p4.Phi() << " ; E: " << lepton.p4.E() << std::endl;
+#endif
+
+          float min_dr = std::numeric_limits<float>::max();
+
+          int8_t index = -1;
+          for (size_t hlt_object = 0; hlt_object < hlt.object_p4.size(); hlt_object++) {
+
+              float dr = VectorUtil::DeltaR(lepton.p4, hlt.object_p4[hlt_object]);
+              float dpt_over_pt = std::abs(lepton.p4.Pt() - hlt.object_p4[hlt_object].Pt()) / lepton.p4.Pt();
+
+              if (dr > m_hltDRCut)
+                  continue;
+
+              if (dpt_over_pt > m_hltDPtCut)
+                  continue;
+
+              if (dr < min_dr) {
+                  min_dr = dr;
+                  index = hlt_object;
+              }
+          }
+
+#if TT_HLT_DEBUG
+          if (index != -1) {
+              std::cout << "\033[32mMatched with online object:\033[00m" << std::endl;
+              std::cout << "\tPDG Id: " << hlt.object_pdg_id[index] << " ; Pt: " << hlt.object_p4[index].Pt() << " ; Eta: " << hlt.object_p4[index].Eta() << " ; Phi: " << hlt.object_p4[index].Phi() << " ; E: " << hlt.object_p4[index].E() << std::endl;
+              std::cout << "\tΔR: " << min_dr << " ; ΔPt / Pt: " << std::abs(lepton.p4.Pt() - hlt.object_p4[index].Pt()) / lepton.p4.Pt() << std::endl;
+          } else {
+              std::cout << "\033[31mNo match found\033[00m" << std::endl;
+          }
+#endif
+
+          lepton.hlt_idx = index;
+          lepton.hlt_already_matched = true;
+
+          return index;
+      };
+
+      // Iterate over all dilepton pairs
+      for (const auto& id: LepLepID::it) {
+          for (auto dilepton_index: diLeptons_LepIDs[id]) {
+              DiLepton& dilepton = diLeptons[dilepton_index];
+
+              // For each lepton of this pair, find the online object
+              dilepton.hlt_idxs = std::make_pair(
+                      matchOfflineLepton(leptons[dilepton.lidxs.first]),
+                      matchOfflineLepton(leptons[dilepton.lidxs.second])
+             );
+          }
+      }
+
+  }
+
+after_hlt_matching:
+
+    ///////////////////////////
+    //       GEN INFO        //
+    ///////////////////////////
+    if (event.isRealData())
+        return;
+
+    const GenParticlesProducer& gen_particles = producers.get<GenParticlesProducer>("gen_particles");
+
+    // 'Pruned' particles are from the hard process
+    // 'Packed' particles are stable particles
+
+    std::function<bool(size_t, size_t)> pruned_decays_from = [&pruned_decays_from, &gen_particles](size_t particle_index, size_t mother_index) -> bool {
+        // Iterator over all pruned particles to find if the particle `particle_index` has `mother_index` in its decay history
+        for (uint16_t index: gen_particles.pruned_mothers_index[particle_index]) {
+            if (index == mother_index) {
+                return true;
+            }
+
+            if (pruned_decays_from(index, mother_index))
+                return true;
+        }
+
+        return false;
+    };
+
+
+#define ASSIGN_INDEX( X ) \
+    if (flags.isLastCopy()) { \
+        gen_##X = i; \
+    } else { \
+        gen_##X##_beforeFSR = i; \
+    }
+
+// Assign index to X if it's empty, or Y if not
+#define ASSIGN_INDEX2(X, Y, ERROR) \
+    if (flags.isLastCopy()) { \
+        if (gen_##X == 0) \
+            gen_##X = i; \
+        else if (gen_##Y == 0)\
+            gen_##Y = i; \
+        else \
+            std::cout << ERROR << std::endl; \
+    } else if (flags.isFirstCopy()) { \
+        if (gen_##X##_beforeFSR == 0) \
+            gen_##X##_beforeFSR = i; \
+        else if (gen_##Y##_beforeFSR == 0)\
+            gen_##Y##_beforeFSR = i; \
+        else \
+            std::cout << ERROR << std::endl; \
+    }
+
+    gen_matched_lepton_t = -1;
+    gen_matched_lepton_tbar = -1;
+
+    for (size_t i = 0; i < gen_particles.pruned_pdg_id.size(); i++) {
+
+        int16_t pdg_id = gen_particles.pruned_pdg_id[i];
+        uint16_t a_pdg_id = std::abs(pdg_id);
+
+        // We only care of particles with PDG id <= 16 (16 is neutrino tau)
+        if (a_pdg_id > 16)
+            continue;
+
+        GenStatusFlags flags(gen_particles.pruned_status_flags[i]);
+
+        if (! flags.isLastCopy() && ! flags.isFirstCopy())
+            continue;
+
+        if (! flags.fromHardProcess())
+            continue;
+
+        if (pdg_id == 6) {
+            ASSIGN_INDEX(t);
+            continue;
+        } else if (pdg_id == -6) {
+            ASSIGN_INDEX(tbar);
+            continue;
+        } else if (pdg_id == 5) {
+            ASSIGN_INDEX(b);
+            continue;
+        } else if (pdg_id == -5) {
+            ASSIGN_INDEX(bbar);
+            continue;
+        }
+
+        if ((gen_tbar == 0) || (gen_t == 0))
+            continue;
+
+        if (gen_t != 0 && pruned_decays_from(i, gen_t)) {
+            if (a_pdg_id >= 1 && a_pdg_id <= 4) {
+                ASSIGN_INDEX2(jet1_t, jet2_t, "Error: more than two quarks coming from top decay");
+            } else if (a_pdg_id == 11 || a_pdg_id == 13 || a_pdg_id == 15) {
+                ASSIGN_INDEX(lepton_t);
+            } else if (a_pdg_id == 12 || a_pdg_id == 14 || a_pdg_id == 16) {
+                ASSIGN_INDEX(neutrino_t);
+            } else {
+                std::cout << "Error: unknown particle coming from top decay - #" << i << " ; PDG Id: " << pdg_id << std::endl;
+            }
+        } else if (gen_tbar != 0 && pruned_decays_from(i, gen_tbar)) {
+            if (a_pdg_id >= 1 && a_pdg_id <= 4) {
+                ASSIGN_INDEX2(jet1_tbar, jet2_tbar, "Error: more than two quarks coming from anti-top decay");
+            } else if (a_pdg_id == 11 || a_pdg_id == 13 || a_pdg_id == 15) {
+                ASSIGN_INDEX(lepton_tbar);
+            } else if (a_pdg_id == 12 || a_pdg_id == 14 || a_pdg_id == 16) {
+                ASSIGN_INDEX(neutrino_tbar);
+            } else {
+                std::cout << "Error: unknown particle coming from anti-top decay - #" << i << " ; PDG Id: " << pdg_id << std::endl;
+            }
+        }
+    }
+
+    if (!gen_t || !gen_tbar) {
+        gen_ttbar_decay_type = NotTT;
+        return;
+    }
+
+    if ((gen_jet1_t != 0) && (gen_jet2_t != 0) && (gen_jet1_tbar != 0) && (gen_jet2_tbar != 0)) {
+        gen_ttbar_decay_type = Hadronic;
+    } else if (
+            ((gen_lepton_t != 0) && (gen_lepton_tbar == 0)) ||
+            ((gen_lepton_t == 0) && (gen_lepton_tbar != 0))
+            ) {
+
+        uint16_t lepton_pdg_id;
+        if (gen_lepton_t != 0)
+            lepton_pdg_id = std::abs(gen_particles.pruned_pdg_id[gen_lepton_t]);
+        else
+            lepton_pdg_id = std::abs(gen_particles.pruned_pdg_id[gen_lepton_tbar]);
+
+        if (lepton_pdg_id == 11)
+            gen_ttbar_decay_type = Semileptonic_e;
+        else if (lepton_pdg_id == 13)
+            gen_ttbar_decay_type = Semileptonic_mu;
+        else
+            gen_ttbar_decay_type = Semileptonic_tau;
+    } else {
+        uint16_t lepton_t_pdg_id = std::abs(gen_particles.pruned_pdg_id[gen_lepton_t]);
+        uint16_t lepton_tbar_pdg_id = std::abs(gen_particles.pruned_pdg_id[gen_lepton_tbar]);
+
+        if (lepton_t_pdg_id == 11 && lepton_tbar_pdg_id == 11)
+            gen_ttbar_decay_type = Dileptonic_ee;
+        else if (lepton_t_pdg_id == 13 && lepton_tbar_pdg_id == 13)
+            gen_ttbar_decay_type = Dileptonic_mumu;
+        else if (lepton_t_pdg_id == 15 && lepton_tbar_pdg_id == 15)
+            gen_ttbar_decay_type = Dileptonic_tautau;
+        else if (
+                (lepton_t_pdg_id == 11 && lepton_tbar_pdg_id == 13) ||
+                (lepton_t_pdg_id == 13 && lepton_tbar_pdg_id == 11)
+                ) {
+            gen_ttbar_decay_type = Dileptonic_mue;
+        }
+        else if (
+                (lepton_t_pdg_id == 11 && lepton_tbar_pdg_id == 15) ||
+                (lepton_t_pdg_id == 15 && lepton_tbar_pdg_id == 11)
+                ) {
+            gen_ttbar_decay_type = Dileptonic_etau;
+        }
+        else if (
+                (lepton_t_pdg_id == 13 && lepton_tbar_pdg_id == 15) ||
+                (lepton_t_pdg_id == 15 && lepton_tbar_pdg_id == 13)
+                ) {
+            gen_ttbar_decay_type = Dileptonic_mutau;
+        } else {
+            std::cout << "Error: unknown dileptonic ttbar decay." << std::endl;
+            gen_ttbar_decay_type = NotTT;
+            return;
+        }
+    }
+
+    gen_ttbar_p4 = gen_particles.pruned_p4[gen_t] + gen_particles.pruned_p4[gen_tbar];
+    if (gen_t_beforeFSR != 0 && gen_tbar_beforeFSR != 0)
+        gen_ttbar_beforeFSR_p4 = gen_particles.pruned_p4[gen_t_beforeFSR] + gen_particles.pruned_p4[gen_tbar_beforeFSR];
+
+    gen_t_tbar_deltaR = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_t], gen_particles.pruned_p4[gen_tbar]);
+    gen_t_tbar_deltaEta = DeltaEta(gen_particles.pruned_p4[gen_t], gen_particles.pruned_p4[gen_tbar]);
+    gen_t_tbar_deltaPhi = VectorUtil::DeltaPhi(gen_particles.pruned_p4[gen_t], gen_particles.pruned_p4[gen_tbar]);
+
+    gen_b_bbar_deltaR = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_b], gen_particles.pruned_p4[gen_bbar]);
+
+    if (gen_ttbar_decay_type > Hadronic) {
+
+        float min_dr_lepton_t = std::numeric_limits<float>::max();
+        float min_dr_lepton_tbar = std::numeric_limits<float>::max();
+
+        size_t lepton_index = 0;
+        for (auto& lepton: leptons) {
+
+            if (gen_lepton_t != 0) {
+                float dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_lepton_t], lepton.p4);
+                if (dr < min_dr_lepton_t &&
+                        (std::abs(lepton.pdg_id()) == std::abs(gen_particles.pruned_pdg_id[gen_lepton_t]))) {
+                    min_dr_lepton_t = dr;
+                    gen_matched_lepton_t = lepton_index;
+                }
+                gen_lepton_t_deltaR.push_back(dr);
+            }
+
+            if (gen_lepton_tbar != 0) {
+                float dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_lepton_tbar], lepton.p4);
+                if (dr < min_dr_lepton_tbar &&
+                        (std::abs(lepton.pdg_id()) == std::abs(gen_particles.pruned_pdg_id[gen_lepton_tbar]))) {
+                    min_dr_lepton_tbar = dr;
+                    gen_matched_lepton_tbar = lepton_index;
+                }
+                gen_lepton_tbar_deltaR.push_back(dr);
+            }
+
+            lepton_index++;
+        }
+    }
+
+    // Match b quarks to jets
+
+    const float MIN_DR_JETS = 0.8;
+    for (const auto& IdWP: LepLepID::it) {
+        float min_dr_b = MIN_DR_JETS;
+        float min_dr_bbar = MIN_DR_JETS;
+        size_t jet_index = 0;
+
+        int8_t local_gen_matched_b = -1;
+        int8_t local_gen_matched_bbar = -1;
+        for (auto& jet: selectedJets_tightID_DRCut[IdWP]) {
+            float dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_b], jets.p4[jet]);
+            if (dr < min_dr_b) {
+                min_dr_b = dr;
+                local_gen_matched_b = jet_index;
+            }
+            gen_b_deltaR[IdWP].push_back(dr);
+
+            dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_bbar], jets.p4[jet]);
+            if (dr < min_dr_bbar) {
+                min_dr_bbar = dr;
+                local_gen_matched_bbar = jet_index;
+            }
+            gen_bbar_deltaR[IdWP].push_back(dr);
+
+            jet_index++;
+        }
+
+        gen_matched_b[IdWP] = local_gen_matched_b;
+        gen_matched_bbar[IdWP] = local_gen_matched_bbar;
+    }
+
+    if (gen_b > 0 && gen_lepton_t > 0) {
+        gen_b_lepton_t_deltaR = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_b], gen_particles.pruned_p4[gen_lepton_t]);
+    }
+
+    if (gen_bbar > 0 && gen_lepton_tbar > 0) {
+        gen_bbar_lepton_tbar_deltaR = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_bbar], gen_particles.pruned_p4[gen_lepton_tbar]);
+    }
 }
 
 void TTAnalyzer::registerCategories(CategoryManager& manager, const edm::ParameterSet& config) {
