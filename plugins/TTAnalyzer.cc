@@ -24,7 +24,7 @@ float TTAnalysis::DeltaEta(const myLorentzVector& v1, const myLorentzVector& v2)
   return abs(v1.Eta() - v2.Eta());
 }
 
-void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const CategoryManager& categories) {
+void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const AnalyzersManager& analyzers, const CategoryManager& categories) {
   
   // Initizalize vectors depending on IDs/WPs to the right lengths
   // Only a resize() is needed (and no assign()), since TreeWrapper clears the vectors after each event.

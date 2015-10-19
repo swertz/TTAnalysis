@@ -43,13 +43,14 @@ process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
             HLTMuonEG = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v3', 'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v3'),
             ),
         )
-    ), redoJEC=True
+    ), redoJEC=False,
+    process_name='RECO'
     )
 
 Framework.schedule(process, ['tt']) 
 
 process.source.fileNames = cms.untracked.vstring(
-        '/store/data/Run2015C/DoubleMuon/MINIAOD/PromptReco-v1/000/254/292/00000/E20B7746-8245-E511-B593-02163E0135AD.root'
+        '/store/data/Run2015D/DoubleMuon/MINIAOD/PromptReco-v4/000/258/174/00000/CAD2CB3F-DB6C-E511-BF85-02163E0143D0.root'
         )
 
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(2000))
