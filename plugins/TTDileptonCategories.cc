@@ -1,249 +1,440 @@
 #include <cp3_llbb/Framework/interface/MuonsProducer.h>
 #include <cp3_llbb/Framework/interface/ElectronsProducer.h>
+#include <cp3_llbb/Framework/interface/HLTProducer.h>
 
 #include <cp3_llbb/TTAnalysis/interface/TTDileptonCategories.h>
 #include <cp3_llbb/TTAnalysis/interface/TTAnalyzer.h>
 
+#include <cp3_llbb/TTAnalysis/interface/Types.h>
+#include <cp3_llbb/TTAnalysis/interface/Indices.h>
+
+using namespace TTAnalysis;
+
 // ***** ***** *****
-// Dilepton category: evaluate Z veto mass cuts
+// Dilepton El-El category
 // ***** ***** *****
-
-void TTDileptonCategory::register_cuts(CutManager& manager) {
-    manager.new_cut("ll_mass_Zveto", "116 > mll > 86");
-};
-
-void TTDileptonCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
-
-    // El-El
-    for(unsigned int iele1 = 0; iele1 < tt.selectedElectrons.size(); iele1++){
-        for(unsigned int iele2 = iele1+1; iele2 < tt.selectedElectrons.size(); iele2++){
-            if( electrons.charge[ tt.selectedElectrons[iele1] ] * electrons.charge[ tt.selectedElectrons[iele2] ] < 0 ){
-                LorentzVector dilep = electrons.p4[ tt.selectedElectrons[iele1] ] + electrons.p4[ tt.selectedElectrons[iele2] ];
-                if( dilep.M() > m_mll_ZVetoCut_low && dilep.M() < m_mll_ZVetoCut_high)
-                    return;
-            }
-        }
-    }
-
-    // Mu-Mu
-    for(unsigned int imu1 = 0; imu1 < tt.selectedMuons.size(); imu1++){
-        for(unsigned int imu2 = imu1+1; imu2 < tt.selectedMuons.size(); imu2++){
-            if( muons.charge[ tt.selectedMuons[imu1] ] * muons.charge[ tt.selectedMuons[imu2] ] < 0 ){
-                LorentzVector dilep = muons.p4[ tt.selectedMuons[imu1] ] + muons.p4[ tt.selectedMuons[imu2] ];
-                if( dilep.M() > m_mll_ZVetoCut_low && dilep.M() < m_mll_ZVetoCut_high)
-                    return;
-            }
-        }
-    }
-
-    manager.pass_cut("ll_mass_Zveto");
+bool ElElCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
+  const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+  return electrons.p4.size() >= 2;
 }
 
-// ***** ***** *****
-// Dilepton Mu-Mu category
-// ***** ***** *****
-bool TTMuMuCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    return muons.p4.size() >= 2 ;
-};
+bool ElElCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
 
-bool TTMuMuCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    const TTAnalyzer& tt_analyzer = analyzers.get<TTAnalyzer>("tt");
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+  // It at least one DiLepton of highest Pt and of type ElEl among all ID pairs is found, keep event in this category
 
-    int selMu1 = tt_analyzer.selectedLeadingMuMu.first;
-    int selMu2 = tt_analyzer.selectedLeadingMuMu.second;
-
-    if( selMu1 < 0 )
-        return false;
-
-    if( tt_analyzer.selectedLeadingElMu.first >= 0){
-        if( muons.p4[selMu1].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElMu.first ].Pt() )
-            return false;
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            if( tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ].isElEl )
+              return true;
+          }
+        
+        }
+      }
     }
+  }
 
-    if( tt_analyzer.selectedLeadingElEl.first >= 0){
-        if( muons.p4[selMu1].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.first ].Pt() )
-            return false;
+  return false;
+}
+
+void ElElCategory::register_cuts(CutManager& manager) {
+  
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          
+          manager.new_cut(baseStrCategory + postFix, baseStrCategory + postFix);
+          manager.new_cut(baseStrExtraDiLeptonVeto + postFix, baseStrExtraDiLeptonVeto + postFix);
+          manager.new_cut(baseStrDiLeptonTriggerMatch + postFix, baseStrDiLeptonTriggerMatch + postFix);
+          manager.new_cut(baseStrMllCut + postFix, baseStrMllCut + postFix);
+          manager.new_cut(baseStrMllZVetoCut + postFix, baseStrMllZVetoCut + postFix);
+          manager.new_cut(baseStrDiLeptonIsOS + postFix, baseStrDiLeptonIsOS + postFix);
+
+        }
+      }
     }
+  }
 
-    if( tt_analyzer.selectedLeadingMuEl.second >= 0){
-        if( muons.p4[selMu2].Pt() < electrons.p4[ tt_analyzer.selectedLeadingMuEl.second ].Pt() )
-            return false;
-    }
+}
 
-    return true;
-};
+void ElElCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
+  const HLTProducer& hlt = producers.get<HLTProducer>("hlt");
 
-void TTMuMuCategory::register_cuts(CutManager& manager) {
-    TTDileptonCategory::register_cuts(manager);
-    manager.new_cut("ll_mass", "mll > 20");
-};
-
-void TTMuMuCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    TTDileptonCategory::evaluate_cuts_post_analyzers(manager, producers, analyzers);
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
     
-    const TTAnalyzer& tt_analyzer = analyzers.get<TTAnalyzer>("tt");
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            const DiLepton& m_diLepton = tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ];
+            
+            if(m_diLepton.isElEl) {
+              manager.pass_cut(baseStrCategory + postFix);
 
-    int selMu1 = tt_analyzer.selectedLeadingMuMu.first;
-    int selMu2 = tt_analyzer.selectedLeadingMuMu.second;
+              if(m_diLepton.hlt_idxs.first >= 0 && m_diLepton.hlt_idxs.second >= 0){
+                // We have fired a trigger. Now, check that it is actually a DoubleEG trigger
+                if( checkHLT(hlt, m_diLepton.hlt_idxs.first, m_diLepton.hlt_idxs.second, HLT::DoubleEG) )
+                  manager.pass_cut(baseStrDiLeptonTriggerMatch + postFix);
+              }
+              
+              if(m_diLepton.p4.M() > m_MllCutSF)
+                manager.pass_cut(baseStrMllCut + postFix);
+              
+              if(m_diLepton.p4.M() < m_MllZVetoCutLow || m_diLepton.p4.M() > m_MllZVetoCutHigh)
+                manager.pass_cut(baseStrMllZVetoCut + postFix);
+              
+              if(m_diLepton.isOS)
+                manager.pass_cut(baseStrDiLeptonIsOS + postFix);
+            }
+          }
+          
+          // For electrons, in principe only veto using VetoID.
+          // But since the user can access any cut he wants, he can take the IDVV_IsoWhatever cut.
+          if(tt.diLeptons_IDIso[comb].size() >= 2) { 
+            manager.pass_cut(baseStrExtraDiLeptonVeto + postFix);
+          }
 
-    if( selMu1 >= 0 ){
-        if( (muons.p4[selMu1] + muons.p4[selMu2]).M() > m_mll_cut)
-            manager.pass_cut("ll_mass");
+        }
+      }
     }
-}
+  }
 
-// ***** ***** *****
-// Dilepton Mu-El category
-// ***** ***** *****
-bool TTMuElCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
-    return muons.p4.size() >= 1 && electrons.p4.size() >= 1;
-};
-
-bool TTMuElCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    const TTAnalyzer& tt_analyzer = analyzers.get<TTAnalyzer>("tt");
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
-
-    int selMu = tt_analyzer.selectedLeadingMuEl.first;
-    int selEl = tt_analyzer.selectedLeadingMuEl.second;
-
-    if( selMu < 0 )
-        return false;
-
-    if( tt_analyzer.selectedLeadingElMu.first >= 0){
-        if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElMu.first ].Pt() )
-            return false;
-    }
-
-    if( tt_analyzer.selectedLeadingElEl.first >= 0){
-        if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.first ].Pt() )
-            return false;
-    }
-
-    if( tt_analyzer.selectedLeadingMuMu.second >= 0){
-        if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.second ].Pt() )
-            return false;
-    }
-
-    return true;
-};
-
-void TTMuElCategory::register_cuts(CutManager& manager) {
-    TTDileptonCategory::register_cuts(manager);
-};
-
-void TTMuElCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    TTDileptonCategory::evaluate_cuts_post_analyzers(manager, producers, analyzers);
 }
 
 // ***** ***** *****
 // Dilepton El-Mu category
 // ***** ***** *****
-bool TTElMuCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
-    return muons.p4.size() >= 1 && electrons.p4.size() >= 1;
-};
-
-bool TTElMuCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    const TTAnalyzer& tt_analyzer = analyzers.get<TTAnalyzer>("tt");
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
-
-    int selEl = tt_analyzer.selectedLeadingElMu.first;
-    int selMu = tt_analyzer.selectedLeadingElMu.second;
-
-    if( selEl < 0 )
-        return false;
-
-    if( tt_analyzer.selectedLeadingMuEl.first >= 0){
-        if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuEl.first ].Pt() )
-            return false;
-    }
-
-    if( tt_analyzer.selectedLeadingMuMu.first >= 0){
-        if( electrons.p4[selEl].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.first ].Pt() )
-            return false;
-    }
-
-    if( tt_analyzer.selectedLeadingElEl.second >= 0){
-        if( muons.p4[selMu].Pt() < electrons.p4[ tt_analyzer.selectedLeadingElEl.second ].Pt() )
-            return false;
-    }
-
-    return true;
-};
-
-void TTElMuCategory::register_cuts(CutManager& manager) {
-    TTDileptonCategory::register_cuts(manager);
-};
-
-void TTElMuCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    TTDileptonCategory::evaluate_cuts_post_analyzers(manager, producers, analyzers);
+bool ElMuCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
+  const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+  const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
+  return electrons.p4.size() >= 1 && muons.p4.size() >= 1;
 }
 
-// ***** ***** *****
-// Dilepton El-El category
-// ***** ***** *****
-bool TTElElCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
-    return electrons.p4.size() >= 2 ;
-};
+bool ElMuCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
 
-bool TTElElCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    const TTAnalyzer& tt_analyzer = analyzers.get<TTAnalyzer>("tt");
-    const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+  // It at least one DiLepton of highest Pt and of type ElMu among all ID pairs is found, keep event in this category
 
-    int selEl1 = tt_analyzer.selectedLeadingElEl.first;
-    int selEl2 = tt_analyzer.selectedLeadingElEl.second;
-
-    if( selEl1 < 0 )
-        return false;
-
-    if( tt_analyzer.selectedLeadingMuEl.first >= 0){
-        if( electrons.p4[selEl1].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuEl.first ].Pt() )
-            return false;
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            if( tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ].isElMu )
+              return true;
+          }
+        
+        }
+      }
     }
+  }
 
-    if( tt_analyzer.selectedLeadingMuMu.first >= 0){
-        if( electrons.p4[selEl1].Pt() < muons.p4[ tt_analyzer.selectedLeadingMuMu.first ].Pt() )
-            return false;
+  return false;
+}
+
+void ElMuCategory::register_cuts(CutManager& manager) {
+  
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          
+          manager.new_cut(baseStrCategory + postFix, baseStrCategory + postFix);
+          manager.new_cut(baseStrExtraDiLeptonVeto + postFix, baseStrExtraDiLeptonVeto + postFix);
+          manager.new_cut(baseStrDiLeptonTriggerMatch + postFix, baseStrDiLeptonTriggerMatch + postFix);
+          manager.new_cut(baseStrMllCut + postFix, baseStrMllCut + postFix);
+          manager.new_cut(baseStrMllZVetoCut + postFix, baseStrMllZVetoCut + postFix);
+          manager.new_cut(baseStrDiLeptonIsOS + postFix, baseStrDiLeptonIsOS + postFix);
+
+        }
+      }
     }
+  }
 
-    if( tt_analyzer.selectedLeadingElMu.second >= 0){
-        if( electrons.p4[selEl2].Pt() < muons.p4[ tt_analyzer.selectedLeadingElMu.second ].Pt() )
-            return false;
-    }
+}
 
-    return true;
-};
+void ElMuCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
+  const HLTProducer& hlt = producers.get<HLTProducer>("hlt");
 
-void TTElElCategory::register_cuts(CutManager& manager) {
-    TTDileptonCategory::register_cuts(manager);
-    manager.new_cut("ll_mass", "mll > 20");
-};
-
-void TTElElCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
-    TTDileptonCategory::evaluate_cuts_post_analyzers(manager, producers, analyzers);
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
     
-    const TTAnalyzer& tt_analyzer = analyzers.get<TTAnalyzer>("tt");
-    const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            const DiLepton& m_diLepton = tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ];
+            
+            if(m_diLepton.isElMu) {
+              manager.pass_cut(baseStrCategory + postFix);
 
-    int selEl1 = tt_analyzer.selectedLeadingElEl.first;
-    int selEl2 = tt_analyzer.selectedLeadingElEl.second;
+              if(m_diLepton.hlt_idxs.first >= 0 && m_diLepton.hlt_idxs.second >= 0){
+                // We have fired a trigger. Now, check that it is actually a MuonEG trigger
+                if( checkHLT(hlt, m_diLepton.hlt_idxs.first, m_diLepton.hlt_idxs.second, HLT::MuonEG) )
+                  manager.pass_cut(baseStrDiLeptonTriggerMatch + postFix);
+              }
+              
+              if(m_diLepton.p4.M() > m_MllCutDF)
+                manager.pass_cut(baseStrMllCut + postFix);
+              
+              if(m_diLepton.p4.M() < m_MllZVetoCutLow || m_diLepton.p4.M() > m_MllZVetoCutHigh)
+                manager.pass_cut(baseStrMllZVetoCut + postFix);
+              
+              if(m_diLepton.isOS)
+                manager.pass_cut(baseStrDiLeptonIsOS + postFix);
+            }
+          }
+          
+          // For electrons, in principe only veto using VetoID.
+          // But since the user can access any cut he wants, he can take the IDVV_IsoWhatever cut.
+          if(tt.diLeptons_IDIso[comb].size() >= 2) { 
+            manager.pass_cut(baseStrExtraDiLeptonVeto + postFix);
+          }
 
-    if( selEl1 >= 0 ){
-        if( (electrons.p4[selEl1] + electrons.p4[selEl2]).M() > m_mll_cut)
-            manager.pass_cut("ll_mass");
+        }
+      }
     }
+  }
+
 }
+
+// ***** ***** *****
+// Dilepton Mu-El category
+// ***** ***** *****
+bool MuElCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
+  const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+  const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
+  return electrons.p4.size() >= 1 && muons.p4.size() >= 1;
+}
+
+bool MuElCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
+
+  // It at least one DiLepton of highest Pt and of type MuEl among all ID pairs is found, keep event in this category
+
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            if( tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ].isMuEl )
+              return true;
+          }
+        
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+void MuElCategory::register_cuts(CutManager& manager) {
+  
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          
+          manager.new_cut(baseStrCategory + postFix, baseStrCategory + postFix);
+          manager.new_cut(baseStrExtraDiLeptonVeto + postFix, baseStrExtraDiLeptonVeto + postFix);
+          manager.new_cut(baseStrDiLeptonTriggerMatch + postFix, baseStrDiLeptonTriggerMatch + postFix);
+          manager.new_cut(baseStrMllCut + postFix, baseStrMllCut + postFix);
+          manager.new_cut(baseStrMllZVetoCut + postFix, baseStrMllZVetoCut + postFix);
+          manager.new_cut(baseStrDiLeptonIsOS + postFix, baseStrDiLeptonIsOS + postFix);
+
+        }
+      }
+    }
+  }
+
+}
+
+void MuElCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
+  const HLTProducer& hlt = producers.get<HLTProducer>("hlt");
+
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
+    
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            const DiLepton& m_diLepton = tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ];
+            
+            if(m_diLepton.isMuEl) {
+              manager.pass_cut(baseStrCategory + postFix);
+
+              if(m_diLepton.hlt_idxs.first >= 0 && m_diLepton.hlt_idxs.second >= 0){
+                // We have fired a trigger. Now, check that it is actually a MuonEG trigger
+                if( checkHLT(hlt, m_diLepton.hlt_idxs.first, m_diLepton.hlt_idxs.second, HLT::MuonEG) )
+                  manager.pass_cut(baseStrDiLeptonTriggerMatch + postFix);
+              }
+              
+              if(m_diLepton.p4.M() > m_MllCutDF)
+                manager.pass_cut(baseStrMllCut + postFix);
+              
+              if(m_diLepton.p4.M() < m_MllZVetoCutLow || m_diLepton.p4.M() > m_MllZVetoCutHigh)
+                manager.pass_cut(baseStrMllZVetoCut + postFix);
+              
+              if(m_diLepton.isOS)
+                manager.pass_cut(baseStrDiLeptonIsOS + postFix);
+            }
+          }
+          
+          // For electrons, in principe only veto using VetoID.
+          // But since the user can access any cut he wants, he can take the IDVV_IsoWhatever cut.
+          if(tt.diLeptons_IDIso[comb].size() >= 2) { 
+            manager.pass_cut(baseStrExtraDiLeptonVeto + postFix);
+          }
+
+        }
+      }
+    }
+  }
+
+}
+
+// ***** ***** *****
+// Dilepton Mu-Mu category
+// ***** ***** *****
+bool MuMuCategory::event_in_category_pre_analyzers(const ProducersManager& producers) const {
+  const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
+  return muons.p4.size() >= 2;
+}
+
+bool MuMuCategory::event_in_category_post_analyzers(const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
+
+  // It at least one DiLepton of highest Pt and of type MuMu among all ID pairs is found, keep event in this category
+
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            if( tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ].isMuMu )
+              return true;
+          }
+        
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+void MuMuCategory::register_cuts(CutManager& manager) {
+  
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          
+          manager.new_cut(baseStrCategory + postFix, baseStrCategory + postFix);
+          manager.new_cut(baseStrExtraDiLeptonVeto + postFix, baseStrExtraDiLeptonVeto + postFix);
+          manager.new_cut(baseStrDiLeptonTriggerMatch + postFix, baseStrDiLeptonTriggerMatch + postFix);
+          manager.new_cut(baseStrMllCut + postFix, baseStrMllCut + postFix);
+          manager.new_cut(baseStrMllZVetoCut + postFix, baseStrMllZVetoCut + postFix);
+          manager.new_cut(baseStrDiLeptonIsOS + postFix, baseStrDiLeptonIsOS + postFix);
+
+        }
+      }
+    }
+  }
+
+}
+
+void MuMuCategory::evaluate_cuts_post_analyzers(CutManager& manager, const ProducersManager& producers, const AnalyzersManager& analyzers) const {
+  
+  const TTAnalyzer& tt = analyzers.get<TTAnalyzer>("tt");
+  const HLTProducer& hlt = producers.get<HLTProducer>("hlt");
+
+  for(const LepID::LepID& id1: LepID::it) {
+    for(const LepID::LepID& id2: LepID::it) {
+      for(const LepIso::LepIso& iso1: LepIso::it) {
+        for(const LepIso::LepIso& iso2: LepIso::it) {
+          
+          std::string postFix("_");
+          postFix += LepLepIDIsoStr(id1, iso1, id2, iso2);
+          uint16_t comb = LepLepIDIso(id1, iso1, id2, iso2);
+    
+          if(tt.diLeptons_IDIso[comb].size() >= 1) {
+            const DiLepton& m_diLepton = tt.diLeptons[ tt.diLeptons_IDIso[comb][0] ];
+            
+            if(m_diLepton.isMuMu) {
+              manager.pass_cut(baseStrCategory + postFix);
+
+              if(m_diLepton.hlt_idxs.first >= 0 && m_diLepton.hlt_idxs.second >= 0){
+                // We have fired a trigger. Now, check that it is actually a DoubleMuon trigger
+                if( checkHLT(hlt, m_diLepton.hlt_idxs.first, m_diLepton.hlt_idxs.second, HLT::DoubleMuon) )
+                  manager.pass_cut(baseStrDiLeptonTriggerMatch + postFix);
+              }
+              
+              if(m_diLepton.p4.M() > m_MllCutSF)
+                manager.pass_cut(baseStrMllCut + postFix);
+              
+              if(m_diLepton.p4.M() < m_MllZVetoCutLow || m_diLepton.p4.M() > m_MllZVetoCutHigh)
+                manager.pass_cut(baseStrMllZVetoCut + postFix);
+              
+              if(m_diLepton.isOS)
+                manager.pass_cut(baseStrDiLeptonIsOS + postFix);
+            }
+          }
+          
+          if(tt.diLeptons_IDIso[comb].size() >= 2) { 
+            manager.pass_cut(baseStrExtraDiLeptonVeto + postFix);
+          }
+
+        }
+      }
+    }
+  }
+
+}
+
