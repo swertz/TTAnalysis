@@ -840,14 +840,17 @@ after_hlt_matching:
 
     std::function<bool(size_t, size_t)> pruned_decays_from = [&pruned_decays_from, &gen_particles](size_t particle_index, size_t mother_index) -> bool {
         // Iterator over all pruned particles to find if the particle `particle_index` has `mother_index` in its decay history
-        for (uint16_t index: gen_particles.pruned_mothers_index[particle_index]) {
-            if (index == mother_index) {
-                return true;
-            }
+        if (gen_particles.pruned_mothers_index[particle_index].empty())
+            return false;
 
-            if (pruned_decays_from(index, mother_index))
-                return true;
+        size_t index = gen_particles.pruned_mothers_index[particle_index][0];
+
+        if (index == mother_index) {
+            return true;
         }
+
+        if (pruned_decays_from(index, mother_index))
+            return true;
 
         return false;
     };
@@ -869,7 +872,8 @@ after_hlt_matching:
 #define ASSIGN_INDEX( X ) \
     if (flags.isLastCopy()) { \
         gen_##X = i; \
-    } else { \
+    }\
+    if (flags.isFirstCopy()) { \
         gen_##X##_beforeFSR = i; \
     }
 
@@ -882,7 +886,8 @@ after_hlt_matching:
             gen_##Y = i; \
         else \
             std::cout << ERROR << std::endl; \
-    } else if (flags.isFirstCopy()) { \
+    } \
+    if (flags.isFirstCopy()) { \
         if (gen_##X##_beforeFSR == 0) \
             gen_##X##_beforeFSR = i; \
         else if (gen_##Y##_beforeFSR == 0)\
@@ -926,13 +931,13 @@ after_hlt_matching:
             continue;
         }
 
-        if (gen_t_beforeFSR == 0 || gen_tbar_beforeFSR == 0) {
+        if (gen_t == 0 || gen_tbar == 0) {
             // Don't bother if we don't have found the tops
             continue;
         }
 
-        bool from_t_decay = pruned_decays_from(i, gen_t_beforeFSR);
-        bool from_tbar_decay = pruned_decays_from(i, gen_tbar_beforeFSR);
+        bool from_t_decay = pruned_decays_from(i, gen_t);
+        bool from_tbar_decay = pruned_decays_from(i, gen_tbar);
 
         // Only keep particles coming from the tops decay
         if (! from_t_decay && ! from_tbar_decay)
@@ -940,7 +945,7 @@ after_hlt_matching:
 
         if (pdg_id == 5) {
             // Maybe it's a b coming from the W decay
-            if (flags.isLastCopy() && gen_b == 0) {
+            if (!flags.isFirstCopy() && flags.isLastCopy() && gen_b == 0) {
 
                 // This can be a B decaying from a W
                 // However, we can't rely on the presence of the W in the decay chain, as it may be generator specific
@@ -971,6 +976,9 @@ after_hlt_matching:
                     }
 #endif
                 } else {
+#if TT_GEN_DEBUG
+                    std::cout << "Assigning gen_b" << std::endl;
+#endif
                     gen_b = i;
                     continue;
                 }
@@ -983,8 +991,7 @@ after_hlt_matching:
 #endif
             }
         } else if (pdg_id == -5) {
-            // Maybe it's a b coming from the W decay
-            if (flags.isLastCopy() && gen_bbar == 0) {
+            if (!flags.isFirstCopy() && flags.isLastCopy() && gen_bbar == 0) {
 
                 // This can be a B decaying from a W
                 // However, we can't rely on the presence of the W in the decay chain, as it may be generator specific
@@ -1015,16 +1022,15 @@ after_hlt_matching:
                     }
 #endif
                 } else {
+#if TT_GEN_DEBUG
+                    std::cout << "Assigning gen_bbar" << std::endl;
+#endif
                     gen_bbar = i;
                     continue;
                 }
             } else if (flags.isFirstCopy() && gen_bbar_beforeFSR == 0) {
                 gen_bbar_beforeFSR = i;
                 continue;
-            } else {
-#if TT_GEN_DEBUG
-                std::cout << "This should not happen!" << std::endl;
-#endif
             }
         }
 
