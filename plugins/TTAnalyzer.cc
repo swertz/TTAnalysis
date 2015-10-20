@@ -15,7 +15,7 @@
 #include <Math/LorentzVector.h>
 #include <Math/VectorUtil.h>
 
-//#define _DEBUG
+//#define _TT_DEBUG_
 
 // To access VectorUtil::DeltaR() more easily
 using namespace ROOT::Math;
@@ -28,6 +28,10 @@ float TTAnalysis::DeltaEta(const myLorentzVector& v1, const myLorentzVector& v2)
 
 void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const AnalyzersManager& analyzers, const CategoryManager& categories) {
   
+  #ifdef _TT_DEBUG_
+    std::cout << "Begin event." << std::endl;
+  #endif
+
   // Initizalize vectors depending on IDs/WPs to the right lengths
   // Only a resize() is needed (and no assign()), since TreeWrapper clears the vectors after each event.
 
@@ -67,6 +71,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   //       ELECTRONS       //
   ///////////////////////////
 
+  #ifdef _TT_DEBUG_
+    std::cout << "Electrons" << std::endl;
+  #endif
+
   const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
 
   for(uint16_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
@@ -100,6 +108,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   //       MUONS           //
   ///////////////////////////
   
+  #ifdef _TT_DEBUG_
+    std::cout << "Muons" << std::endl;
+  #endif
+
   const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
 
   for(uint16_t imuon = 0; imuon < muons.p4.size(); imuon++){
@@ -151,6 +163,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   ///////////////////////////
   //       DILEPTONS       //
   ///////////////////////////
+
+  #ifdef _TT_DEBUG_
+    std::cout << "Dileptons" << std::endl;
+  #endif
 
   for(uint16_t i1 = 0; i1 < leptons.size(); i1++){
     for(uint16_t i2 = i1 + 1; i2 < leptons.size(); i2++){
@@ -219,6 +235,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   ///////////////////////////
   //       JETS            //
   ///////////////////////////
+
+  #ifdef _TT_DEBUG_
+    std::cout << "Jets" << std::endl;
+  #endif
 
   const JetsProducer& jets = producers.get<JetsProducer>("jets");
 
@@ -292,12 +312,16 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   //       DIJETS          //
   ///////////////////////////
 
+  #ifdef _TT_DEBUG_
+    std::cout << "Dijets" << std::endl;
+  #endif
+
   // Next, construct DiJets out of selected jets with selected ID (not accounting for minDRjl here)
 
   uint16_t diJetCounter(0);
 
   for(uint16_t j1 = 0; j1 < selJets_selID.size(); j1++){
-    for(uint16_t j2 = 0; j2 < selJets_selID.size(); j2++){
+    for(uint16_t j2 = j1 + 1; j2 < selJets_selID.size(); j2++){
       const uint16_t jidx1 = selJets_selID[j1];
       const Jet& jet1 = selJets[jidx1];
       const uint16_t jidx2 = selJets_selID[j2];
@@ -335,7 +359,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
                 uint16_t combB = JetJetBWP(wp1, wp2);
                 uint16_t combAll = LepIDIsoJetJetBWP(id, iso, wp1, wp2);
                 if(m_diJet.BWP[combB])
-                  diBJets_DRCut_BWP_PtOrdered[combAll].push_back(combAll);
+                  diBJets_DRCut_BWP_PtOrdered[combAll].push_back(diJetCounter);
               }
             }
           
@@ -366,6 +390,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   //    EVENT VARIABLES    //
   ///////////////////////////
   
+  #ifdef _TT_DEBUG_
+    std::cout << "Dileptons-dijets" << std::endl;
+  #endif
+
   // leptons-(b-)jets
 
   uint16_t diLepDiJetCounter(0);
@@ -481,6 +509,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   }
       
   // leptons-(b-)jets-MET
+
+  #ifdef _TT_DEBUG_
+    std::cout << "Dileptons-Dijets-MET" << std::endl;
+  #endif
 
   const METProducer &met = producers.get<METProducer>("met");
   const METProducer &noHFmet = producers.get<METProducer>("nohf_met");
@@ -702,6 +734,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   //       TRIGGER         //
   ///////////////////////////
 
+  #ifdef _TT_DEBUG_
+    std::cout << "Trigger" << std::endl;
+  #endif
+
   if (producers.exists("hlt")) {
 
 #define TT_HLT_DEBUG (false)
@@ -788,9 +824,10 @@ after_hlt_matching:
     ///////////////////////////
     //       GEN INFO        //
     ///////////////////////////
-#ifdef _DEBUG
-  std::cout << "Generator" << std::endl;
-#endif
+
+    #ifdef _TT_DEBUG_
+      std::cout << "Generator" << std::endl;
+    #endif
 
     if (event.isRealData())
         return;
@@ -1043,6 +1080,11 @@ after_hlt_matching:
     if (gen_bbar > 0 && gen_lepton_tbar > 0) {
         gen_bbar_lepton_tbar_deltaR = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_bbar], gen_particles.pruned_p4[gen_lepton_tbar]);
     }
+
+    #ifdef _TT_DEBUG_
+      std::cout << "End event." << std::endl;
+    #endif
+
 }
 
 void TTAnalyzer::registerCategories(CategoryManager& manager, const edm::ParameterSet& config) {
