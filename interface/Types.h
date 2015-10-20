@@ -2,68 +2,21 @@
 
 #include <utility>
 #include <vector>
-#include <map>
 #include <limits>
-#include <array>
 
 #include <Math/PtEtaPhiE4D.h>
 #include <Math/LorentzVector.h>
 #include <Math/VectorUtil.h>
+
+#include <cp3_llbb/TTAnalysis/interface/Indices.h>
 
 // Needed because of gcc bug when using typedef and std::map
 #define myLorentzVector ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float>>
 
 namespace TTAnalysis {
 
+  // Forward declaration to use this here
   float DeltaEta(const myLorentzVector &v1, const myLorentzVector &v2);
-  
-  namespace LepID{
-    enum LepID{ L, M, T, V, Count };
-    // Ugly way to allow iterating over all items in the enumeration ( for(const LepID::LepID& id: LepID::it) )
-    const std::array<LepID, Count> it = {{ L, M, T, V }};
-    // Is useful in categories to construct cut strings out of each working point
-    const std::map<LepID, std::string> map = { {L, "L"}, {M, "M"}, {T, "T"}, {V, "V"} };
-  }
-  
-  namespace LepLepID{
-    enum LepLepID{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
-    const std::array<LepLepID, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
-    const std::map<LepLepID, std::string> map = { {LL, "LL"}, {LM, "LM"}, {ML, "ML"}, {LT, "LT"}, {TL, "TL"}, {MM, "MM"}, {MT, "MT"}, {TM, "TM"}, {TT, "TT"} };
-  }
-  
-  namespace JetID{
-    enum JetID{ L, T, TLV, Count };
-    const std::array<JetID, Count> it = {{ L, T, TLV }};
-    const std::map<JetID, std::string> map = { {L, "L"}, {T, "T"}, {TLV, "TLV"} };
-  }
-  
-  namespace BWP{
-    enum BWP{ L, M, T, Count };
-    const std::array<BWP, Count> it = {{ L, M, T }};
-    const std::map<BWP, std::string> map = { {L, "L"}, {M, "M"}, {T, "T"} };
-  }
-  
-  namespace BBWP{
-    enum BBWP{ LL, LM, ML, LT, TL, MM, MT, TM, TT, Count };
-    const std::array<BBWP, Count> it = {{ LL, LM, ML, LT, TL, MM, MT, TM, TT }};
-    const std::map<BBWP, std::string> map = { {LL, "LL"}, {LM, "LM"}, {ML, "ML"}, {LT, "LT"}, {TL, "TL"}, {MM, "MM"}, {MT, "MT"}, {TM, "TM"}, {TT, "TT"} };
-  }
-
-    enum TTDecayType {
-        NotTT = 0,
-        Hadronic,
-        Semileptonic_e,
-        Semileptonic_mu,
-        Dileptonic_mumu,
-        Dileptonic_ee,
-        Dileptonic_mue,
-
-        // With tau
-        Semileptonic_tau,
-        Dileptonic_tautau,
-        Dileptonic_mutau,
-        Dileptonic_etau
-    };
 
   struct BaseObject {
     BaseObject(myLorentzVector p4): p4(p4) {}
@@ -75,26 +28,42 @@ namespace TTAnalysis {
 
   struct Lepton: BaseObject {
     Lepton():
-      lepID(LepID::Count, false)
+      ID(LepID::Count, false),
+      iso(LepIso::Count, false)
     {}
-    Lepton(myLorentzVector p4, uint8_t idx, uint8_t charge, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false):
-      BaseObject(p4), idx(idx), charge(charge), isEl(isEl), isMu(isMu)
+    Lepton(myLorentzVector p4, uint16_t idx, uint16_t charge, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false, float isoValue = 0, bool isoLoose = false, bool isoTight = false):
+      BaseObject(p4), 
+      idx(idx), 
+      charge(charge),
+      isoValue(isoValue),
+      isEl(isEl), 
+      isMu(isMu)
       {
-        lepID.push_back(isLoose);
-        lepID.push_back(isMedium);
-        lepID.push_back(isTight);
+        ID.push_back(isLoose);
+        ID.push_back(isMedium);
+        ID.push_back(isTight);
         if(isEl)
-          lepID.push_back(isVeto);
+          ID.push_back(isVeto);
         else
-          lepID.push_back(false);
+          ID.push_back(isLoose); // for muons, re-use Loose as Veto ID
+
+        if(isMu){
+          iso.push_back(isoLoose);
+          iso.push_back(isoTight);
+        }else{
+          iso.push_back(true);
+          iso.push_back(false);
+        }
       }
     
-    uint8_t idx; // stores index to electron/muon arrays
-    uint8_t charge;
-    int8_t hlt_idx = -1; // Index to the matched HLT object. -1 if no match
+    uint16_t idx; // stores index to electron/muon arrays
+    uint16_t charge;
+    float isoValue;
+    int16_t hlt_idx = -1; // Index to the matched HLT object. -1 if no match
     bool isEl;
     bool isMu;
-    std::vector<bool> lepID; // lepton IDs: loose-medium-tight(-veto)
+    std::vector<bool> ID; // lepton ID: loose-medium-tight(-veto)
+    std::vector<bool> iso; // lepton Iso: loose-tight (only for muons -> electrons only have loose)
 
     bool hlt_already_matched = false; // Internal flag; if true, it means this lepton has already been matched to an online object, even if no match has been found.
 
@@ -106,31 +75,47 @@ namespace TTAnalysis {
   
   struct DiLepton: BaseObject {
     DiLepton():
-      lepIDs(LepLepID::Count, false)
+      ID(LepID::Count*LepID::Count, false),
+      iso(LepIso::Count*LepIso::Count, false)
       {}
     
-    std::pair<int, int> idxs; // stores indices to electron/muon arrays
-    std::pair<int, int> lidxs; // stores indices to Lepton array
-    std::pair<int8_t, int8_t> hlt_idxs; // Stores indices of matched online objects
+    std::pair<uint16_t, uint16_t> idxs; // stores indices to electron/muon arrays
+    std::pair<uint16_t, uint16_t> lidxs; // stores indices to Lepton array
+    std::pair<int16_t, int16_t> hlt_idxs; // Stores indices of matched online objects
     bool isElEl, isElMu, isMuEl, isMuMu;
     bool isOS; // opposite sign
     bool isSF; // same flavour
-    std::vector<bool> lepIDs;
+    std::vector<bool> ID; // combination of two lepton IDs
+    std::vector<bool> iso; // combination of two lepton isolations
     float DR;
     float DEta;
     float DPhi;
   };
+ 
+  struct Jet: BaseObject {
+    Jet():
+      ID(JetID::Count, false),
+      minDRjl_lepIDIso(LepID::Count*LepIso::Count, std::numeric_limits<float>::max()),
+      BWP(BWP::Count, false)
+      {}
+
+    uint16_t idx; // index to jet array
+    std::vector<bool> ID;
+    std::vector<float> minDRjl_lepIDIso; // defined for each combination of a lepton ID and isolation
+    float CSVv2;
+    std::vector<bool> BWP;
+  };
   
   struct DiJet: BaseObject {
     DiJet():
-      minDRjl_lepIDs(LepLepID::Count, std::numeric_limits<float>::max()),
-      CSVv2_WPs(BBWP::Count, false)
+      minDRjl_lepIDIso(LepID::Count*LepIso::Count, std::numeric_limits<float>::max()),
+      BWP(BWP::Count*BWP::Count, false)
       {}
     
-    std::pair<int, int> idxs; // stores indices to jets array
-    //std::pair<int, int> jidxs; // stores indices to TTAnalysis::Jet array (NOT implemented... necessary??)
-    std::vector<float> minDRjl_lepIDs;
-    std::vector<bool> CSVv2_WPs;
+    std::pair<uint16_t, uint16_t> idxs; // stores indices to jets array
+    std::pair<uint16_t, uint16_t> jidxs; // stores indices to TTAnalysis::Jet array
+    std::vector<float> minDRjl_lepIDIso; // defined for each combination of a lepton ID and isolation
+    std::vector<bool> BWP; // combination of two b-tagging working points
     float DR;
     float DEta;
     float DPhi;
@@ -153,9 +138,9 @@ namespace TTAnalysis {
       {}
 
     const DiLepton* diLepton;
-    int diLepIdx;
+    uint16_t diLepIdx;
     const DiJet* diJet;
-    int diJetIdx;
+    uint16_t diJetIdx;
 
     float DR_ll_jj, DEta_ll_jj, DPhi_ll_jj;
     
@@ -166,7 +151,7 @@ namespace TTAnalysis {
 
   struct DiLepDiJetMet: DiLepDiJet {
     DiLepDiJetMet() {}
-    DiLepDiJetMet(const DiLepDiJet& diLepDiJet, uint8_t diLepDiJetIdx, const myLorentzVector& MetP4, bool hasNoHFMet = false):
+    DiLepDiJetMet(const DiLepDiJet& diLepDiJet, uint16_t diLepDiJetIdx, const myLorentzVector& MetP4, bool hasNoHFMet = false):
       DiLepDiJet(*diLepDiJet.diLepton, diLepDiJet.diLepIdx, *diLepDiJet.diJet, diLepDiJet.diJetIdx),
       diLepDiJetIdx(diLepDiJetIdx),
       hasNoHFMet(hasNoHFMet)
@@ -194,7 +179,7 @@ namespace TTAnalysis {
       DPhi_lljj_Met = ROOT::Math::VectorUtil::DeltaPhi(diLepton->p4 + diJet->p4, MetP4);
     }
 
-    uint8_t diLepDiJetIdx;
+    uint16_t diLepDiJetIdx;
     bool hasNoHFMet;
 
     float DR_ll_Met, DR_jj_Met;

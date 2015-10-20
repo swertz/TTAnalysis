@@ -18,13 +18,14 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             
             muonPtCut = cms.untracked.double(20),
             muonEtaCut = cms.untracked.double(2.4),
-            muonBaseIsoCut = cms.untracked.double(.20), # Loose cut recommended for dilepton analysis
+            muonLooseIsoCut = cms.untracked.double(.20), # Loose cut recommended for dilepton analysis
+            muonTightIsoCut = cms.untracked.double(.12),
 
             jetPtCut = cms.untracked.double(30),
             jetEtaCut = cms.untracked.double(2.5),
             #jetPUID = cms.untracked.double(-9999999),
             jetDRleptonCut = cms.untracked.double(0.3),
-            #jetID = cms.untracked.string('tight'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
+            jetID = cms.untracked.string('tight'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
             jetCSVv2Name = cms.untracked.string('pfCombinedInclusiveSecondaryVertexV2BJetTags'),
             jetCSVv2L = cms.untracked.double(0.605),
             jetCSVv2M = cms.untracked.double(0.89),
@@ -35,12 +36,12 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             ),
         categories_parameters = cms.PSet(
             MllCutSF = cms.untracked.double(20),
-            MllCutDF = cms.untracked.double(0),
+            MllCutDF = cms.untracked.double(20),
             MllZVetoCutLow = cms.untracked.double(86),
             MllZVetoCutHigh = cms.untracked.double(116),
-            HLTDoubleMuon = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v1', 'HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v1'),
-            HLTDoubleEG = cms.untracked.vstring('HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v1'),
-            HLTMuonEG = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1', 'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v1'),
+            HLTDoubleMuon = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_(Tk)?Mu8_TrkIsoVVL_DZ_v.*'),
+            HLTDoubleEG = cms.untracked.vstring('HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v.*'),
+            HLTMuonEG = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v.*', 'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v.*'),
             ),
         )
     ), redoJEC=False
@@ -49,7 +50,7 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
 Framework.schedule(process, ['tt'])
 
 process.source.fileNames = cms.untracked.vstring(
-        '/store/mc/RunIISpring15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/00000/0014DC94-DC5C-E511-82FB-7845C4FC39F5.root'
+        'file:/nfs/scratch/fynu/swertz/CMSSW_7_4_15/src/cp3_llbb/TTAnalysis/test/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_miniAODv2_oneFile.root'
         )
 
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(2000))
