@@ -41,7 +41,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
   diLeptons_IDIso.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count );
   
-  selJets_selID.resize( LepID::Count * LepIso::Count );
   selJets_selID_DRCut.resize( LepID::Count * LepIso::Count );
   selBJets_DRCut_BWP_PtOrdered.resize( LepID::Count * LepIso::Count * BWP::Count );
   selBJets_DRCut_BWP_CSVv2Ordered.resize( LepID::Count * LepIso::Count * BWP::Count );
@@ -268,13 +267,13 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           
           for(const uint16_t& lepIdx: leptons_IDIso[idx_comb]){
             const Lepton& m_lepton = leptons[lepIdx];
-            float DR = (float) VectorUtil::DeltaR(jets.p4[ijet], leptons[lepIdx].p4);
+            float DR = (float) VectorUtil::DeltaR(jets.p4[ijet], m_lepton.p4);
             if( DR < m_jet.minDRjl_lepIDIso[idx_comb] )
               m_jet.minDRjl_lepIDIso[idx_comb] = DR;
           }
           
           // Save the indices to Jets passing the selected jetID and minDRjl > cut for this lepton ID/Iso
-          if( m_jet.minDRjl_lepIDIso[idx_comb] && jetIDAccessor(jets, ijet, m_jetID) ){
+          if( m_jet.minDRjl_lepIDIso[idx_comb] > m_jetDRleptonCut && jetIDAccessor(jets, ijet, m_jetID) ){
             selJets_selID_DRCut[idx_comb].push_back(jetCounter);
 
             // Out of these, save the indices for different b-tagging working points
@@ -288,10 +287,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
         }
       }
       
-      selJets.push_back(m_jet);
-      
       if(jetIDAccessor(jets, ijet, m_jetID)) // Save the indices to Jets passing the selected jet ID
         selJets_selID.push_back(jetCounter);
+      
+      selJets.push_back(m_jet);
       
       jetCounter++;
     }
@@ -333,8 +332,8 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
       m_diJet.jidxs = std::make_pair(jidx1, jidx2);
       
       m_diJet.DR = VectorUtil::DeltaR(jet1.p4, jet2.p4);
-      m_diJet.DPhi = VectorUtil::DeltaPhi(jet1.p4, jet2.p4);
       m_diJet.DEta = DeltaEta(jet1.p4, jet2.p4);
+      m_diJet.DPhi = VectorUtil::DeltaPhi(jet1.p4, jet2.p4);
      
       for(const BWP::BWP& wp1: BWP::it){
         for(const BWP::BWP& wp2: BWP::it){
