@@ -124,7 +124,7 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(gen_neutrino_tbar, uint16_t); // Index of the neutrino from the anti-top decay chain
         BRANCH(gen_neutrino_tbar_beforeFSR, uint16_t); // Index of the neutrino from the anti-top decay chain, before any FSR
 
-        BRANCH(gen_ttbar_decay_type, uint16_t); // Type of ttbar decay. Can take any values from TTDecayType enum
+        BRANCH(gen_ttbar_decay_type, char); // Type of ttbar decay. Can take any values from TTDecayType enum
 
         BRANCH(gen_ttbar_beforeFSR_p4, LorentzVector);
         BRANCH(gen_ttbar_p4, LorentzVector);

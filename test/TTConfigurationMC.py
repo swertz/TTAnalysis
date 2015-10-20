@@ -49,8 +49,20 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
 
 Framework.schedule(process, ['tt'])
 
+#process.source.firstEvent = cms.untracked.uint32(13083444)
+#process.source.firstLuminosityBlock = cms.untracked.uint32(52386)
+
+# Tricky gen event from /store/mc/RunIISpring15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/00000/0014DC94-DC5C-E511-82FB-7845C4FC39F5.root
+# First one is g g -> t tbar with one W -> bbar c
+# Second is b bar -> t tbar semi-leptonic
+#process.source.eventsToProcess = cms.untracked.VEventRange(
+        #'1:52386:13083444',
+        #'1:34020:8496854'
+        #)
+#process.MessageLogger.cerr.FwkReport.reportEvery = 1
+
 process.source.fileNames = cms.untracked.vstring(
         'file:/nfs/scratch/fynu/swertz/CMSSW_7_4_15/src/cp3_llbb/TTAnalysis/test/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_miniAODv2_oneFile.root'
         )
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(2000))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
