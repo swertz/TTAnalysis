@@ -85,7 +85,7 @@ namespace TTAnalysis {
         m_diLepDiJetsMet(&diLepDiJetsMet) 
         {}
       
-      bool operator()(const int idx1, const int idx2){
+      bool operator()(const uint16_t idx1, const uint16_t idx2){
         
         if(m_diJets){
           return 

@@ -54,4 +54,4 @@ process.source.fileNames = cms.untracked.vstring(
         '/store/data/Run2015B/DoubleMuon/MINIAOD/05Oct2015-v1/40000/F6B9EFF5-BE6E-E511-A5DD-002618943964.root'
         )
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(2000))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(20000))
