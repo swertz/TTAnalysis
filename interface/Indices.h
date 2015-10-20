@@ -82,6 +82,7 @@ namespace TTAnalysis {
 
 
   enum TTDecayType {
+    UnknownTT = -1,
     NotTT = 0,
     Hadronic,
     Semileptonic_e,
