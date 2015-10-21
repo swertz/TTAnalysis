@@ -37,22 +37,23 @@ namespace TTAnalysis {
       charge(charge),
       isoValue(isoValue),
       isEl(isEl), 
-      isMu(isMu)
+      isMu(isMu),
+      ID(LepID::Count, false),
+      iso(LepIso::Count, false)
       {
         if(isEl)
-          ID.push_back(isVeto);
+          ID[LepID::V] = isVeto;
         else
-          ID.push_back(isLoose); // for muons, re-use Loose as Veto ID
-        ID.push_back(isLoose);
-        ID.push_back(isMedium);
-        ID.push_back(isTight);
+          ID[LepID::V] = isLoose; // for muons, re-use Loose as Veto ID
+        ID[LepID::L] = isLoose;
+        ID[LepID::M] = isMedium;
+        ID[LepID::T] = isTight;
 
         if(isMu){
-          iso.push_back(isoLoose);
-          iso.push_back(isoTight);
+          iso[LepIso::L] = isoLoose;
+          iso[LepIso::T] = isoTight;
         }else{
-          iso.push_back(true);
-          iso.push_back(false);
+          iso[LepIso::L] = true;
         }
       }
     
