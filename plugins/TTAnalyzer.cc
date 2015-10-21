@@ -143,7 +143,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   }
 
   // Sort the leptons vector according to Pt
-  std::sort(leptons.begin(), leptons.end(), [](const Lepton& a, const Lepton &b){ return b.p4.Pt() > a.p4.Pt(); });
+  std::sort(leptons.begin(), leptons.end(), [](const Lepton& a, const Lepton &b){ return a.p4.Pt() > b.p4.Pt(); });
 
   // Store indices to leptons for each ID/Iso combination
   for(uint16_t idx = 0; idx < leptons.size(); idx++){
