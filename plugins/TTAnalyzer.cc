@@ -84,10 +84,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           ielectron, 
           electrons.charge[ielectron], 
           true, false,
+          electrons.ids[ielectron][m_electronVetoIDName],
           electrons.ids[ielectron][m_electronLooseIDName],
           electrons.ids[ielectron][m_electronMediumIDName],
           electrons.ids[ielectron][m_electronTightIDName],
-          electrons.ids[ielectron][m_electronVetoIDName],
           electrons.relativeIsoR03_withEA[ielectron]
       );
       
@@ -121,10 +121,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           imuon,
           muons.charge[imuon], 
           false, true,
+          muons.isLoose[imuon], // isVeto => for muons, re-use isLoose
           muons.isLoose[imuon],
           muons.isMedium[imuon],
           muons.isTight[imuon],
-          muons.isLoose[imuon], // isVeto => for muons, re-use isLoose
           muons.relativeIsoR04_withEA[imuon],
           muons.relativeIsoR04_withEA[imuon] > m_muonLooseIsoCut,
           muons.relativeIsoR04_withEA[imuon] > m_muonTightIsoCut
