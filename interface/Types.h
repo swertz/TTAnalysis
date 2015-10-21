@@ -31,28 +31,29 @@ namespace TTAnalysis {
       ID(LepID::Count, false),
       iso(LepIso::Count, false)
     {}
-    Lepton(myLorentzVector p4, uint16_t idx, uint16_t charge, bool isEl, bool isMu, bool isLoose = false, bool isMedium = false, bool isTight = false, bool isVeto = false, float isoValue = 0, bool isoLoose = false, bool isoTight = false):
+    Lepton(myLorentzVector p4, uint16_t idx, uint16_t charge, bool isEl, bool isMu, bool isVeto = false, bool isLoose = false, bool isMedium = false, bool isTight = false, float isoValue = 0, bool isoLoose = false, bool isoTight = false):
       BaseObject(p4), 
       idx(idx), 
       charge(charge),
       isoValue(isoValue),
       isEl(isEl), 
-      isMu(isMu)
+      isMu(isMu),
+      ID(LepID::Count, false),
+      iso(LepIso::Count, false)
       {
-        ID.push_back(isLoose);
-        ID.push_back(isMedium);
-        ID.push_back(isTight);
         if(isEl)
-          ID.push_back(isVeto);
+          ID[LepID::V] = isVeto;
         else
-          ID.push_back(isLoose); // for muons, re-use Loose as Veto ID
+          ID[LepID::V] = isLoose; // for muons, re-use Loose as Veto ID
+        ID[LepID::L] = isLoose;
+        ID[LepID::M] = isMedium;
+        ID[LepID::T] = isTight;
 
         if(isMu){
-          iso.push_back(isoLoose);
-          iso.push_back(isoTight);
+          iso[LepIso::L] = isoLoose;
+          iso[LepIso::T] = isoTight;
         }else{
-          iso.push_back(true);
-          iso.push_back(false);
+          iso[LepIso::L] = true;
         }
       }
     
@@ -62,7 +63,7 @@ namespace TTAnalysis {
     int16_t hlt_idx = -1; // Index to the matched HLT object. -1 if no match
     bool isEl;
     bool isMu;
-    std::vector<bool> ID; // lepton ID: loose-medium-tight(-veto)
+    std::vector<bool> ID; // lepton ID: veto-loose-medium-tight
     std::vector<bool> iso; // lepton Iso: loose-tight (only for muons -> electrons only have loose)
 
     bool hlt_already_matched = false; // Internal flag; if true, it means this lepton has already been matched to an online object, even if no match has been found.
