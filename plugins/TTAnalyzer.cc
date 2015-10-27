@@ -22,8 +22,8 @@ using namespace ROOT::Math;
 
 using namespace TTAnalysis;
 
-float TTAnalysis::DeltaEta(const myLorentzVector& v1, const myLorentzVector& v2){
-  return abs(v1.Eta() - v2.Eta());
+float TTAnalysis::DeltaEta(const myLorentzVector& v1, const myLorentzVector& v2) {
+  return std::abs(v1.Eta() - v2.Eta());
 }
 
 void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, const ProducersManager& producers, const AnalyzersManager& analyzers, const CategoryManager& categories) {
@@ -126,8 +126,8 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           muons.isMedium[imuon],
           muons.isTight[imuon],
           muons.relativeIsoR04_withEA[imuon],
-          muons.relativeIsoR04_withEA[imuon] > m_muonLooseIsoCut,
-          muons.relativeIsoR04_withEA[imuon] > m_muonTightIsoCut
+          muons.relativeIsoR04_withEA[imuon] < m_muonLooseIsoCut,
+          muons.relativeIsoR04_withEA[imuon] < m_muonTightIsoCut
       );
 
       for(const LepID::LepID& id: LepID::it){
