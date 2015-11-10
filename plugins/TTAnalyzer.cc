@@ -879,7 +879,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
        */
       auto matchOfflineLepton = [&](Lepton& lepton) {
 
-          if (lepton.hlt_already_matched)
+          if (lepton.hlt_already_tried_matching)
               return lepton.hlt_idx;
 
 #if TT_HLT_DEBUG
@@ -918,7 +918,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 #endif
 
           lepton.hlt_idx = index;
-          lepton.hlt_already_matched = true;
+          lepton.hlt_already_tried_matching = true;
+          lepton.hlt_DR_matched_object = min_dr;
+          lepton.hlt_DPt_matched_object = std::abs(lepton.p4.Pt() - hlt.object_p4[index].Pt()) / lepton.p4.Pt();
 
           return index;
       };

@@ -67,7 +67,10 @@ namespace TTAnalysis {
     std::vector<bool> ID; // lepton ID: veto-loose-medium-tight
     std::vector<bool> iso; // lepton Iso: loose-tight (only for muons -> electrons only have loose)
 
-    bool hlt_already_matched = false; // Internal flag; if true, it means this lepton has already been matched to an online object, even if no match has been found.
+    float hlt_DR_matched_object;
+    float hlt_DPt_matched_object;
+
+    bool hlt_already_tried_matching = false; // Internal flag; if true, it means this lepton has already been matched to an online object, even if no match has been found.
 
     int8_t pdg_id() const {
         int8_t id = (isEl) ? 11 : 13;

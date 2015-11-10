@@ -2,7 +2,7 @@
   <class name="TTAnalysis::BaseObject"/> 
   <class name="std::vector<TTAnalysis::BaseObject>"/>
   <class name="TTAnalysis::Lepton">
-    <field name="hlt_already_matched" transient="true"/>
+    <field name="hlt_already_tried_matching" transient="true"/>
   </class>
   <class name="std::vector<TTAnalysis::Lepton>"/>
   <class name="TTAnalysis::Jet"/>
