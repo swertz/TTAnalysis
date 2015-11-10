@@ -137,9 +137,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           muons.isLoose[imuon],
           muons.isMedium[imuon],
           muons.isTight[imuon],
-          muons.relativeIsoR04_withEA[imuon],
-          muons.relativeIsoR04_withEA[imuon] < m_muonLooseIsoCut,
-          muons.relativeIsoR04_withEA[imuon] < m_muonTightIsoCut
+          muons.relativeIsoR04_deltaBeta[imuon],
+          muons.relativeIsoR04_deltaBeta[imuon] < m_muonLooseIsoCut,
+          muons.relativeIsoR04_deltaBeta[imuon] < m_muonTightIsoCut
       );
 
       for(const LepID::LepID& id: LepID::it){
