@@ -31,8 +31,8 @@ process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
             jetCSVv2M = cms.untracked.double(0.89),
             jetCSVv2T = cms.untracked.double(0.97),
 
-            hltDRCut = cms.untracked.double(0.05), # DeltaR cut for trigger matching
-            hltDPtCut = cms.untracked.double(0.1), #Delta(Pt)/Pt cut for trigger matching
+            hltDRCut = cms.untracked.double(0.3), # DeltaR cut for trigger matching
+            hltDPtCut = cms.untracked.double(0.5), #Delta(Pt)/Pt cut for trigger matching
             ),
         categories_parameters = cms.PSet(
             MllCutSF = cms.untracked.double(20),
