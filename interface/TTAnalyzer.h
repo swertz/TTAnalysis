@@ -33,7 +33,7 @@ class TTAnalyzer: public Framework::Analyzer {
             m_jetEtaCut( config.getUntrackedParameter<double>("jetEtaCut", 2.5) ),
             m_jetPUID( config.getUntrackedParameter<double>("jetPUID", std::numeric_limits<float>::min()) ),
             m_jetDRleptonCut( config.getUntrackedParameter<double>("jetDRleptonCut", 0.3) ),
-            m_jetID( config.getUntrackedParameter<std::string>("jetID", "tight") ),
+            m_jetID( config.getUntrackedParameter<std::string>("jetID", "loose") ),
             m_jetCSVv2Name( config.getUntrackedParameter<std::string>("jetCSVv2Name", "pfCombinedInclusiveSecondaryVertexV2BJetTags") ),
             m_jetCSVv2L( config.getUntrackedParameter<double>("jetCSVv2L", 0.605) ),
             m_jetCSVv2M( config.getUntrackedParameter<double>("jetCSVv2M", 0.89) ),
