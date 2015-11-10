@@ -672,7 +672,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
             } // end minDRjl>cut
 
             // Then noHF MET
-            if(m_diLepDiJetMetNoHF.diLepton->ID[diLepCombIDIso] && m_diLepDiJetMetNoHF.diLepton->iso[combIso] && m_diLepDiJetMetNoHF.diJet->minDRjl_lepIDIso[minCombIDIso] > m_jetDRleptonCut){
+            if(m_diLepDiJetMetNoHF.diLepton->ID[combID] && m_diLepDiJetMetNoHF.diLepton->iso[combIso] && m_diLepDiJetMetNoHF.diJet->minDRjl_lepIDIso[minCombIDIso] > m_jetDRleptonCut){
               diLepDiJetsMetNoHF_DRCut[diLepCombIDIso].push_back(i);
               
               // Out of these, store combinations of b-tagging working points
