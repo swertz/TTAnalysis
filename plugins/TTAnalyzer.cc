@@ -89,7 +89,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
 
   for(uint16_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
-    if( electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
+    if( electrons.p4[ielectron].Pt() > m_electronPtCut && std::abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
       
       Lepton m_lepton(
           electrons.p4[ielectron], 
@@ -126,7 +126,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
 
   for(uint16_t imuon = 0; imuon < muons.p4.size(); imuon++){
-    if(muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
+    if(muons.p4[imuon].Pt() > m_muonPtCut && std::abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
       
       Lepton m_lepton(
           muons.p4[imuon], 
@@ -258,7 +258,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   uint16_t jetCounter(0);
   for(uint16_t ijet = 0; ijet < jets.p4.size(); ijet++){
     // Save the jets that pass the kinematic cuts
-    if( abs(jets.p4[ijet].Eta()) < m_jetEtaCut && jets.p4[ijet].Pt() > m_jetPtCut){
+    if (std::abs(jets.p4[ijet].Eta()) < m_jetEtaCut && jets.p4[ijet].Pt() > m_jetPtCut){
       Jet m_jet;
       
       m_jet.p4 = jets.p4[ijet];
