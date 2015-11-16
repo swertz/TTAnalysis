@@ -31,6 +31,7 @@ class TTAnalyzer: public Framework::Analyzer {
             
             m_jetPtCut( config.getUntrackedParameter<double>("jetPtCut", 30) ),
             m_jetEtaCut( config.getUntrackedParameter<double>("jetEtaCut", 2.5) ),
+            m_bJetEtaCut( config.getUntrackedParameter<double>("bJetEtaCut", 2.4) ),
             m_jetPUID( config.getUntrackedParameter<double>("jetPUID", std::numeric_limits<float>::min()) ),
             m_jetDRleptonCut( config.getUntrackedParameter<double>("jetDRleptonCut", 0.3) ),
             m_jetID( config.getUntrackedParameter<std::string>("jetID", "loose") ),
@@ -160,7 +161,7 @@ class TTAnalyzer: public Framework::Analyzer {
 
         const float m_muonPtCut, m_muonEtaCut, m_muonLooseIsoCut, m_muonTightIsoCut;
 
-        const float m_jetPtCut, m_jetEtaCut, m_jetPUID, m_jetDRleptonCut;
+        const float m_jetPtCut, m_jetEtaCut, m_bJetEtaCut, m_jetPUID, m_jetDRleptonCut;
         const std::string m_jetID, m_jetCSVv2Name;
         const float m_jetCSVv2L, m_jetCSVv2M, m_jetCSVv2T;
 
