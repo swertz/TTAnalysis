@@ -89,6 +89,8 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(diLepDiBJetsMetNoHF_DRCut_BWP_PtOrdered, std::vector<std::vector<uint16_t>>);
         BRANCH(diLepDiBJetsMetNoHF_DRCut_BWP_CSVv2Ordered, std::vector<std::vector<uint16_t>>);
 
+        BRANCH(ttbar, std::vector<std::vector<std::vector<TTAnalysis::TTBar>>>);
+
         // Gen matching. All indexes are from the `pruned` collection
         BRANCH(gen_t, uint16_t); // Index of the top quark
         BRANCH(gen_t_beforeFSR, uint16_t); // Index of the top quark, before any FSR
@@ -163,6 +165,8 @@ class TTAnalyzer: public Framework::Analyzer {
         const float m_jetCSVv2L, m_jetCSVv2M, m_jetCSVv2T;
 
         const float m_hltDRCut, m_hltDPtCut;
+
+        std::shared_ptr<NeutrinosSolver> m_neutrinos_solver;
 
         static inline bool muonIDAccessor(const MuonsProducer& muons, const uint16_t index, const std::string& muonID){
             if(index >= muons.p4.size())

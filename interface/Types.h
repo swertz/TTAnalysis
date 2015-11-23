@@ -9,6 +9,7 @@
 #include <Math/VectorUtil.h>
 
 #include <cp3_llbb/TTAnalysis/interface/Indices.h>
+#include <cp3_llbb/TTAnalysis/interface/NeutrinosSolver.h>
 
 // Needed because of gcc bug when using typedef and std::map
 #define myLorentzVector ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float>>
@@ -197,6 +198,28 @@ namespace TTAnalysis {
     float maxDEta_l_Met, maxDEta_j_Met;
     float minDPhi_l_Met, minDPhi_j_Met;
     float maxDPhi_l_Met, maxDPhi_j_Met;
+  };
+
+  struct TTBar: public BaseObject {
+
+      TTBar() {}
+
+      TTBar(const myLorentzVector& top1_p4_, const myLorentzVector& top2_p4_) {
+           top1_p4 = top1_p4_;
+           top2_p4 = top2_p4_;
+           p4 = top1_p4 + top2_p4;
+
+           DR_tt = ROOT::Math::VectorUtil::DeltaR(top1_p4, top2_p4);
+           DEta_tt = DeltaEta(top1_p4, top2_p4);
+           DPhi_tt = ROOT::Math::VectorUtil::DeltaPhi(top1_p4, top2_p4);
+      }
+
+      myLorentzVector top1_p4;
+      myLorentzVector top2_p4;
+
+      float DR_tt;
+      float DEta_tt;
+      float DPhi_tt;
   };
 
 }

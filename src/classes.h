@@ -21,5 +21,9 @@ namespace TTAnalysis {
     std::vector<uint16_t> dummy13;
     std::vector<std::vector<uint16_t>> dummy14;
     std::vector<float> dummy17;
+    TTAnalysis::TTBar dummy18;
+    std::vector<TTAnalysis::TTBar> dummy19;
+    std::vector<std::vector<TTAnalysis::TTBar>> dummy20;
+    std::vector<std::vector<std::vector<TTAnalysis::TTBar>>> dummy21;
   };
 }
