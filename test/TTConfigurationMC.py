@@ -47,6 +47,8 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
     ), redoJEC=False
     )
 
+del process.framework.producers.fat_jets
+
 Framework.schedule(process, ['tt'])
 
 #process.source.firstEvent = cms.untracked.uint32(13083444)
