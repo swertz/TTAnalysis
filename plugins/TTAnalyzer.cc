@@ -799,7 +799,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
                     std::cout << "\t Neutrino 1: " << sol.first << std::endl;
                     std::cout << "\t Neutrino 2: " << sol.second << std::endl;
 #endif
-                    ttbar_sols.push_back(TTBar(myLorentzVector(lepton1_p4 + bjet1_p4 + sol.first), myLorentzVector(lepton2_p4 + bjet2_p4 + sol.second)));
+                    ttbar_sols.push_back(TTBar(idx, myLorentzVector(lepton1_p4 + bjet1_p4 + sol.first), myLorentzVector(lepton2_p4 + bjet2_p4 + sol.second)));
 #if TT_MTT_DEBUG
                     std::cout << "mtt: " << ttbar_sols.back().p4.M() << std::endl;
 #endif
@@ -822,7 +822,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
                     std::cout << "\t Neutrino 1: " << sol.first << std::endl;
                     std::cout << "\t Neutrino 2: " << sol.second << std::endl;
 #endif
-                    ttbar_sols.push_back(TTBar(myLorentzVector(lepton1_p4 + bjet1_p4 + sol.first), myLorentzVector(lepton2_p4 + bjet2_p4 + sol.second)));
+                    ttbar_sols.push_back(TTBar(idx, myLorentzVector(lepton1_p4 + bjet1_p4 + sol.first), myLorentzVector(lepton2_p4 + bjet2_p4 + sol.second)));
 #if TT_MTT_DEBUG
                     std::cout << "mtt: " << ttbar_sols.back().p4.M() << std::endl;
 #endif
