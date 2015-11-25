@@ -25,14 +25,14 @@ process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
             jetEtaCut = cms.untracked.double(2.5),
             #jetPUID = cms.untracked.double(-9999999),
             jetDRleptonCut = cms.untracked.double(0.3),
-            jetID = cms.untracked.string('tight'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
+            jetID = cms.untracked.string('loose'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
             jetCSVv2Name = cms.untracked.string('pfCombinedInclusiveSecondaryVertexV2BJetTags'),
             jetCSVv2L = cms.untracked.double(0.605),
             jetCSVv2M = cms.untracked.double(0.89),
             jetCSVv2T = cms.untracked.double(0.97),
 
-            hltDRCut = cms.untracked.double(0.05), # DeltaR cut for trigger matching
-            hltDPtCut = cms.untracked.double(0.1), #Delta(Pt)/Pt cut for trigger matching
+            hltDRCut = cms.untracked.double(0.3), # DeltaR cut for trigger matching
+            hltDPtCut = cms.untracked.double(0.5), #Delta(Pt)/Pt cut for trigger matching
             ),
         categories_parameters = cms.PSet(
             MllCutSF = cms.untracked.double(20),

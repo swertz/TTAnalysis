@@ -89,7 +89,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
 
   for(uint16_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
-    if( electrons.p4[ielectron].Pt() > m_electronPtCut && abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
+    if( electrons.p4[ielectron].Pt() > m_electronPtCut && std::abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
       
       Lepton m_lepton(
           electrons.p4[ielectron], 
@@ -126,7 +126,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
 
   for(uint16_t imuon = 0; imuon < muons.p4.size(); imuon++){
-    if(muons.p4[imuon].Pt() > m_muonPtCut && abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
+    if(muons.p4[imuon].Pt() > m_muonPtCut && std::abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
       
       Lepton m_lepton(
           muons.p4[imuon], 
@@ -137,9 +137,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           muons.isLoose[imuon],
           muons.isMedium[imuon],
           muons.isTight[imuon],
-          muons.relativeIsoR04_withEA[imuon],
-          muons.relativeIsoR04_withEA[imuon] < m_muonLooseIsoCut,
-          muons.relativeIsoR04_withEA[imuon] < m_muonTightIsoCut
+          muons.relativeIsoR04_deltaBeta[imuon],
+          muons.relativeIsoR04_deltaBeta[imuon] < m_muonLooseIsoCut,
+          muons.relativeIsoR04_deltaBeta[imuon] < m_muonTightIsoCut
       );
 
       for(const LepID::LepID& id: LepID::it){
@@ -258,7 +258,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   uint16_t jetCounter(0);
   for(uint16_t ijet = 0; ijet < jets.p4.size(); ijet++){
     // Save the jets that pass the kinematic cuts
-    if( abs(jets.p4[ijet].Eta()) < m_jetEtaCut && jets.p4[ijet].Pt() > m_jetPtCut){
+    if (std::abs(jets.p4[ijet].Eta()) < m_jetEtaCut && jets.p4[ijet].Pt() > m_jetPtCut){
       Jet m_jet;
       
       m_jet.p4 = jets.p4[ijet];
@@ -291,11 +291,10 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
             // Out of these, save the indices for different b-tagging working points
             for(const BWP::BWP& wp: BWP::it){
               uint16_t idx_comb_b = LepIDIsoJetBWP(id, iso, wp);
-              if(m_jet.BWP[wp])
+              if ((m_jet.BWP[wp]) && (std::abs(m_jet.p4.Eta()) < m_bJetEtaCut))
                 selBJets_DRCut_BWP_PtOrdered[idx_comb_b].push_back(jetCounter);
             }
-          }            
-        
+          }
         }
       }
       
@@ -369,7 +368,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
               for(const BWP::BWP& wp2: BWP::it){
                 uint16_t combB = JetJetBWP(wp1, wp2);
                 uint16_t combAll = LepIDIsoJetJetBWP(id, iso, wp1, wp2);
-                if(m_diJet.BWP[combB])
+                if ((m_diJet.BWP[combB])
+                        && (std::abs(jet1.p4.Eta()) < m_bJetEtaCut)
+                        && (std::abs(jet2.p4.Eta()) < m_bJetEtaCut))
                   diBJets_DRCut_BWP_PtOrdered[combAll].push_back(diJetCounter);
               }
             }
@@ -479,7 +480,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
                   for(const BWP::BWP& wp2: BWP::it){
                     uint16_t combB = JetJetBWP(wp1, wp2);
                     uint16_t combAll = LepLepIDIsoJetJetBWP(id1, iso1, id2, iso2, wp1, wp2);
-                    if(m_diJet.BWP[combB])
+                    if ((m_diJet.BWP[combB])
+                            && (std::abs(jets.p4[m_diJet.idxs.first].Eta()) < m_bJetEtaCut)
+                            && (std::abs(jets.p4[m_diJet.idxs.second].Eta()) < m_bJetEtaCut))
                       diLepDiBJets_DRCut_BWP_PtOrdered[combAll].push_back(diLepDiJetCounter);
                   }
                 } // end b-jet loops
@@ -664,7 +667,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
                 for(const BWP::BWP& wp2: BWP::it){
                   uint16_t combB = JetJetBWP(wp1, wp2);
                   uint16_t combAll = LepLepIDIsoJetJetBWP(id1, iso1, id2, iso2, wp1, wp2);
-                  if(m_diLepDiJetMet.diJet->BWP[combB])
+                  if ((m_diLepDiJetMet.diJet->BWP[combB])
+                          && (std::abs(jets.p4[m_diLepDiJetMet.diJet->idxs.first].Eta()) < m_bJetEtaCut)
+                          && (std::abs(jets.p4[m_diLepDiJetMet.diJet->idxs.second].Eta()) < m_bJetEtaCut))
                     diLepDiBJetsMet_DRCut_BWP_PtOrdered[combAll].push_back(i);
                 }
               } // end b-jet loops
@@ -672,7 +677,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
             } // end minDRjl>cut
 
             // Then noHF MET
-            if(m_diLepDiJetMetNoHF.diLepton->ID[diLepCombIDIso] && m_diLepDiJetMetNoHF.diLepton->iso[combIso] && m_diLepDiJetMetNoHF.diJet->minDRjl_lepIDIso[minCombIDIso] > m_jetDRleptonCut){
+            if(m_diLepDiJetMetNoHF.diLepton->ID[combID] && m_diLepDiJetMetNoHF.diLepton->iso[combIso] && m_diLepDiJetMetNoHF.diJet->minDRjl_lepIDIso[minCombIDIso] > m_jetDRleptonCut){
               diLepDiJetsMetNoHF_DRCut[diLepCombIDIso].push_back(i);
               
               // Out of these, store combinations of b-tagging working points
@@ -680,7 +685,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
                 for(const BWP::BWP& wp2: BWP::it){
                   uint16_t combB = JetJetBWP(wp1, wp2);
                   uint16_t combAll = LepLepIDIsoJetJetBWP(id1, iso1, id2, iso2, wp1, wp2);
-                  if(m_diLepDiJetMetNoHF.diJet->BWP[combB])
+                  if ((m_diLepDiJetMetNoHF.diJet->BWP[combB])
+                          && (std::abs(jets.p4[m_diLepDiJetMetNoHF.diJet->idxs.first].Eta()) < m_bJetEtaCut)
+                          && (std::abs(jets.p4[m_diLepDiJetMetNoHF.diJet->idxs.second].Eta()) < m_bJetEtaCut))
                     diLepDiBJetsMetNoHF_DRCut_BWP_PtOrdered[combAll].push_back(i);
                 }
               } // end b-jet loops
@@ -879,7 +886,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
        */
       auto matchOfflineLepton = [&](Lepton& lepton) {
 
-          if (lepton.hlt_already_matched)
+          if (lepton.hlt_already_tried_matching)
               return lepton.hlt_idx;
 
 #if TT_HLT_DEBUG
@@ -918,7 +925,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 #endif
 
           lepton.hlt_idx = index;
-          lepton.hlt_already_matched = true;
+          lepton.hlt_already_tried_matching = true;
+          lepton.hlt_DR_matched_object = min_dr;
+          lepton.hlt_DPt_matched_object = std::abs(lepton.p4.Pt() - hlt.object_p4[index].Pt()) / lepton.p4.Pt();
 
           return index;
       };
