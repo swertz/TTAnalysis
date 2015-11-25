@@ -48,6 +48,8 @@ process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
     process_name='RECO'
     )
 
+del process.framework.producers.fat_jets
+
 Framework.schedule(process, ['tt']) 
 
 process.source.fileNames = cms.untracked.vstring(
