@@ -204,15 +204,20 @@ namespace TTAnalysis {
 
       TTBar() {}
 
-      TTBar(const myLorentzVector& top1_p4_, const myLorentzVector& top2_p4_) {
-           top1_p4 = top1_p4_;
-           top2_p4 = top2_p4_;
-           p4 = top1_p4 + top2_p4;
+      TTBar(uint16_t index, const myLorentzVector& top1_p4_, const myLorentzVector& top2_p4_) {
 
-           DR_tt = ROOT::Math::VectorUtil::DeltaR(top1_p4, top2_p4);
-           DEta_tt = DeltaEta(top1_p4, top2_p4);
-           DPhi_tt = ROOT::Math::VectorUtil::DeltaPhi(top1_p4, top2_p4);
+          diLepDiJetIdx = index;
+
+          top1_p4 = top1_p4_;
+          top2_p4 = top2_p4_;
+          p4 = top1_p4 + top2_p4;
+
+          DR_tt = ROOT::Math::VectorUtil::DeltaR(top1_p4, top2_p4);
+          DEta_tt = DeltaEta(top1_p4, top2_p4);
+          DPhi_tt = ROOT::Math::VectorUtil::DeltaPhi(top1_p4, top2_p4);
       }
+
+      uint16_t diLepDiJetIdx;
 
       myLorentzVector top1_p4;
       myLorentzVector top2_p4;
