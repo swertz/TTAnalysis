@@ -9,6 +9,12 @@ process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
         prefix = cms.string('tt_'),
         enable = cms.bool(True),
         parameters = cms.PSet(
+            electronsProducer = cms.string('electrons'),
+            muonsProducer = cms.string('muons'),
+            jetsProducer = cms.string('jets'),
+            metProducer = cms.string('met'),
+            nohfMETProducer = cms.string('nohf_met'),
+
             electronPtCut = cms.untracked.double(20),
             electronEtaCut = cms.untracked.double(2.5),
             electronVetoIDName = cms.untracked.string('cutBasedElectronID-Spring15-25ns-V1-standalone-veto'),

@@ -86,7 +86,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     std::cout << "Electrons" << std::endl;
   #endif
 
-  const ElectronsProducer& electrons = producers.get<ElectronsProducer>("electrons");
+  const ElectronsProducer& electrons = producers.get<ElectronsProducer>(m_electrons_producer);
 
   for(uint16_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
     if( electrons.p4[ielectron].Pt() > m_electronPtCut && std::abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
@@ -123,7 +123,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     std::cout << "Muons" << std::endl;
   #endif
 
-  const MuonsProducer& muons = producers.get<MuonsProducer>("muons");
+  const MuonsProducer& muons = producers.get<MuonsProducer>(m_muons_producer);
 
   for(uint16_t imuon = 0; imuon < muons.p4.size(); imuon++){
     if(muons.p4[imuon].Pt() > m_muonPtCut && std::abs(muons.p4[imuon].Eta()) < m_muonEtaCut ){
@@ -251,7 +251,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     std::cout << "Jets" << std::endl;
   #endif
 
-  const JetsProducer& jets = producers.get<JetsProducer>("jets");
+  const JetsProducer& jets = producers.get<JetsProducer>(m_jets_producer);
 
   // First find the jets passing kinematic cuts and save them as Jet objects
 
@@ -528,8 +528,8 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     std::cout << "Dileptons-Dijets-MET" << std::endl;
   #endif
 
-  const METProducer &met = producers.get<METProducer>("met");
-  const METProducer &noHFmet = producers.get<METProducer>("nohf_met");
+  const METProducer &met = producers.get<METProducer>(m_met_producer);
+  const METProducer &noHFmet = producers.get<METProducer>(m_nohf_met_producer);
   
   for(uint16_t i = 0; i < diLepDiJets.size(); i++){
     // Using regular MET

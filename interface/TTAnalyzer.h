@@ -16,6 +16,13 @@ class TTAnalyzer: public Framework::Analyzer {
     public:
         TTAnalyzer(const std::string& name, const ROOT::TreeGroup& tree_, const edm::ParameterSet& config):
             Analyzer(name, tree_, config),
+
+            // Not untracked as these parameters are mandatory
+            m_electrons_producer(config.getParameter<std::string>("electronsProducer")),
+            m_muons_producer(config.getParameter<std::string>("muonsProducer")),
+            m_jets_producer(config.getParameter<std::string>("jetsProducer")),
+            m_met_producer(config.getParameter<std::string>("metProducer")),
+            m_nohf_met_producer(config.getParameter<std::string>("nohfMETProducer")),
             
             m_electronPtCut( config.getUntrackedParameter<double>("electronPtCut", 20) ),
             m_electronEtaCut( config.getUntrackedParameter<double>("electronEtaCut", 2.5) ),
@@ -152,6 +159,13 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(gen_matched_lepton_tbar, char); // Index inside the `leptons` collection of the lepton with the smallest deltaR with the gen lepton coming from the anti-top decay chain
 
     private:
+
+        // Producers name
+        const std::string m_electrons_producer;
+        const std::string m_muons_producer;
+        const std::string m_jets_producer;
+        const std::string m_met_producer;
+        const std::string m_nohf_met_producer;
 
         const float m_electronPtCut, m_electronEtaCut;
         const std::string m_electronVetoIDName;
