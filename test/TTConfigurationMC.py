@@ -9,6 +9,12 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
         prefix = cms.string('tt_'),
         enable = cms.bool(True),
         parameters = cms.PSet(
+            electronsProducer = cms.string('electrons'),
+            muonsProducer = cms.string('muons'),
+            jetsProducer = cms.string('jets'),
+            metProducer = cms.string('met'),
+            nohfMETProducer = cms.string('nohf_met'),
+
             electronPtCut = cms.untracked.double(20),
             electronEtaCut = cms.untracked.double(2.5),
             electronVetoIDName = cms.untracked.string('cutBasedElectronID-Spring15-25ns-V1-standalone-veto'),
@@ -44,12 +50,13 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             HLTMuonEG = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v.*', 'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v.*'),
             ),
         )
-    ), redoJEC=False
+    ),
+    redoJEC=False,
+
+    # doSystematics=['jec', 'jer']
     )
 
 del process.framework.producers.fat_jets
-
-Framework.schedule(process, ['tt'])
 
 #process.source.firstEvent = cms.untracked.uint32(13083444)
 #process.source.firstLuminosityBlock = cms.untracked.uint32(52386)
