@@ -57,10 +57,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   diLepDiBJetsMet_DRCut_BWP_PtOrdered.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count * BWP::Count * BWP::Count );
   diLepDiBJetsMet_DRCut_BWP_CSVv2Ordered.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count * BWP::Count * BWP::Count );
   
-  diLepDiJetsMetNoHF_DRCut.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count );
-  diLepDiBJetsMetNoHF_DRCut_BWP_PtOrdered.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count * BWP::Count * BWP::Count );
-  diLepDiBJetsMetNoHF_DRCut_BWP_CSVv2Ordered.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count * BWP::Count * BWP::Count );
-
   ttbar.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count * BWP::Count * BWP::Count );
 
   gen_matched_b.resize( LepID::Count * LepIso::Count , -1);
@@ -529,7 +525,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   #endif
 
   const METProducer &met = producers.get<METProducer>(m_met_producer);
-  const METProducer &noHFmet = producers.get<METProducer>(m_nohf_met_producer);
   
   for(uint16_t i = 0; i < diLepDiJets.size(); i++){
     // Using regular MET
@@ -587,61 +582,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
     diLepDiJetsMet.push_back(m_diLepDiJetMet);
 
-    // Using noHF MET
-    DiLepDiJetMet m_diLepDiJetMetNoHF(diLepDiJets[i], i, noHFmet.p4, true);
-    
-    m_diLepDiJetMetNoHF.minDR_l_Met = std::min(
-        (float) VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.maxDR_l_Met = std::max(
-        (float) VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaR(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.minDEta_l_Met = std::min(
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.first].p4, met.p4),
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.maxDEta_l_Met = std::max(
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.first].p4, met.p4),
-        DeltaEta(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.minDPhi_l_Met = std::min(
-        (float) VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.maxDPhi_l_Met = std::max(
-        (float) VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaPhi(leptons[m_diLepDiJetMetNoHF.diLepton->lidxs.second].p4, met.p4)
-        );
-
-    m_diLepDiJetMetNoHF.minDR_j_Met = std::min(
-        (float) VectorUtil::DeltaR(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaR(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.maxDR_j_Met = std::max(
-        (float) VectorUtil::DeltaR(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaR(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.minDEta_j_Met = std::min(
-        DeltaEta(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.first].p4, met.p4),
-        DeltaEta(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.maxDEta_j_Met = std::max(
-        DeltaEta(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.first].p4, met.p4),
-        DeltaEta(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.minDPhi_j_Met = std::min(
-        (float) VectorUtil::DeltaPhi(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaPhi(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.second].p4, met.p4)
-        );
-    m_diLepDiJetMetNoHF.maxDPhi_j_Met = std::max(
-        (float) VectorUtil::DeltaPhi(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.first].p4, met.p4),
-        (float) VectorUtil::DeltaPhi(selJets[m_diLepDiJetMetNoHF.diJet->jidxs.second].p4, met.p4)
-        );
-
-    diLepDiJetsMet.push_back(m_diLepDiJetMetNoHF);
-    
     for(const LepID::LepID& id1: LepID::it){
       for(const LepID::LepID& id2: LepID::it){
         for(const LepIso::LepIso& iso1: LepIso::it){
@@ -676,24 +616,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
             } // end minDRjl>cut
 
-            // Then noHF MET
-            if(m_diLepDiJetMetNoHF.diLepton->ID[combID] && m_diLepDiJetMetNoHF.diLepton->iso[combIso] && m_diLepDiJetMetNoHF.diJet->minDRjl_lepIDIso[minCombIDIso] > m_jetDRleptonCut){
-              diLepDiJetsMetNoHF_DRCut[diLepCombIDIso].push_back(i);
-              
-              // Out of these, store combinations of b-tagging working points
-              for(const BWP::BWP& wp1: BWP::it){
-                for(const BWP::BWP& wp2: BWP::it){
-                  uint16_t combB = JetJetBWP(wp1, wp2);
-                  uint16_t combAll = LepLepIDIsoJetJetBWP(id1, iso1, id2, iso2, wp1, wp2);
-                  if ((m_diLepDiJetMetNoHF.diJet->BWP[combB])
-                          && (std::abs(jets.p4[m_diLepDiJetMetNoHF.diJet->idxs.first].Eta()) < m_bJetEtaCut)
-                          && (std::abs(jets.p4[m_diLepDiJetMetNoHF.diJet->idxs.second].Eta()) < m_bJetEtaCut))
-                    diLepDiBJetsMetNoHF_DRCut_BWP_PtOrdered[combAll].push_back(i);
-                }
-              } // end b-jet loops
-
-            } // end minDRjl>cut
-          
           }
         } // end lepton iso loops
       }
@@ -725,29 +647,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     }
   }
   
-  // Then noHF MET
-  diLepDiBJetsMetNoHF_DRCut_BWP_CSVv2Ordered = diLepDiBJetsMetNoHF_DRCut_BWP_PtOrdered; 
-  for(const LepID::LepID& id1: LepID::it){
-    for(const LepID::LepID& id2: LepID::it){
-      
-      for(const LepIso::LepIso& iso1: LepIso::it){
-        for(const LepIso::LepIso& iso2: LepIso::it){
-          
-          for(const BWP::BWP& wp1: BWP::it){ 
-            for(const BWP::BWP& wp2: BWP::it){ 
-              
-              uint16_t idx_comb_all = LepLepIDIsoJetJetBWP(id1, iso1, id2, iso2, wp1, wp2);
-              std::sort(diLepDiBJetsMetNoHF_DRCut_BWP_CSVv2Ordered[idx_comb_all].begin(), diLepDiBJetsMetNoHF_DRCut_BWP_CSVv2Ordered[idx_comb_all].end(), diJetBTagDiscriminantSorter(jets, m_jetCSVv2Name, diLepDiJetsMet));
-            
-            }
-          }
-        
-        }
-      }
-    
-    }
-  }
-
   ///////////////////////////
   //         MTT           //
   ///////////////////////////

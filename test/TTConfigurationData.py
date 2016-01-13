@@ -3,8 +3,8 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
 from cp3_llbb.Framework import Framework
 
-process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
-    tt = cms.PSet(
+framework = Framework.Framework(True, eras.Run2_25ns, globalTag='74X_dataRun2_v2', processName='RECO')
+framework.addAnalyzer('tt', cms.PSet(
         type = cms.string('tt_analyzer'),
         prefix = cms.string('tt_'),
         enable = cms.bool(True),
@@ -13,7 +13,6 @@ process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
             muonsProducer = cms.string('muons'),
             jetsProducer = cms.string('jets'),
             metProducer = cms.string('met'),
-            nohfMETProducer = cms.string('nohf_met'),
 
             electronPtCut = cms.untracked.double(20),
             electronEtaCut = cms.untracked.double(2.5),
@@ -50,13 +49,11 @@ process = Framework.create(True, eras.Run2_25ns, '74X_dataRun2_v2', cms.PSet(
             HLTMuonEG = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v.*', 'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v.*'),
             ),
         )
-    ), redoJEC=False,
-    process_name='RECO'
     )
 
-del process.framework.producers.fat_jets
+framework.removeProducer('fat_jets')
 
-Framework.schedule(process, ['tt']) 
+process = framework.create()
 
 process.source.fileNames = cms.untracked.vstring(
         '/store/data/Run2015B/DoubleMuon/MINIAOD/05Oct2015-v1/40000/F6B9EFF5-BE6E-E511-A5DD-002618943964.root'

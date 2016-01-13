@@ -3,8 +3,9 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
 from cp3_llbb.Framework import Framework
 
-process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cms.PSet(
-    tt = cms.PSet(
+framework = Framework.Framework(False, eras.Run2_25ns, globalTag='74X_mcRun2_asymptotic_v2')
+
+framework.addAnalyzer('tt', cms.PSet(
         type = cms.string('tt_analyzer'),
         prefix = cms.string('tt_'),
         enable = cms.bool(True),
@@ -13,7 +14,6 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             muonsProducer = cms.string('muons'),
             jetsProducer = cms.string('jets'),
             metProducer = cms.string('met'),
-            nohfMETProducer = cms.string('nohf_met'),
 
             electronPtCut = cms.untracked.double(20),
             electronEtaCut = cms.untracked.double(2.5),
@@ -50,13 +50,13 @@ process = Framework.create(False, eras.Run2_25ns, '74X_mcRun2_asymptotic_v2', cm
             HLTMuonEG = cms.untracked.vstring('HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v.*', 'HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v.*'),
             ),
         )
-    ),
-    redoJEC=False,
-
-    # doSystematics=['jec', 'jer']
     )
 
-del process.framework.producers.fat_jets
+framework.removeProducer('fat_jets')
+
+#framework.doSystematics(['jec', 'jer'])
+
+process = framework.create()
 
 #process.source.firstEvent = cms.untracked.uint32(13083444)
 #process.source.firstLuminosityBlock = cms.untracked.uint32(52386)
