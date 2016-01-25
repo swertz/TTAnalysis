@@ -22,7 +22,6 @@ class TTAnalyzer: public Framework::Analyzer {
             m_muons_producer(config.getParameter<std::string>("muonsProducer")),
             m_jets_producer(config.getParameter<std::string>("jetsProducer")),
             m_met_producer(config.getParameter<std::string>("metProducer")),
-            m_nohf_met_producer(config.getParameter<std::string>("nohfMETProducer")),
             
             m_electronPtCut( config.getUntrackedParameter<double>("electronPtCut", 20) ),
             m_electronEtaCut( config.getUntrackedParameter<double>("electronEtaCut", 2.5) ),
@@ -93,10 +92,6 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(diLepDiBJetsMet_DRCut_BWP_PtOrdered, std::vector<std::vector<uint16_t>>);
         BRANCH(diLepDiBJetsMet_DRCut_BWP_CSVv2Ordered, std::vector<std::vector<uint16_t>>);
         
-        BRANCH(diLepDiJetsMetNoHF_DRCut, std::vector<std::vector<uint16_t>>); 
-        BRANCH(diLepDiBJetsMetNoHF_DRCut_BWP_PtOrdered, std::vector<std::vector<uint16_t>>);
-        BRANCH(diLepDiBJetsMetNoHF_DRCut_BWP_CSVv2Ordered, std::vector<std::vector<uint16_t>>);
-
         BRANCH(ttbar, std::vector<std::vector<std::vector<TTAnalysis::TTBar>>>);
 
         // Gen matching. All indexes are from the `pruned` collection
@@ -165,7 +160,6 @@ class TTAnalyzer: public Framework::Analyzer {
         const std::string m_muons_producer;
         const std::string m_jets_producer;
         const std::string m_met_producer;
-        const std::string m_nohf_met_producer;
 
         const float m_electronPtCut, m_electronEtaCut;
         const std::string m_electronVetoIDName;
