@@ -60,9 +60,13 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   ttbar.resize( LepID::Count * LepIso::Count * LepID::Count * LepIso::Count * BWP::Count * BWP::Count );
 
   gen_matched_b.resize( LepID::Count * LepIso::Count , -1);
+  gen_matched_b_beforeFSR.resize( LepID::Count * LepIso::Count , -1);
   gen_matched_bbar.resize( LepID::Count * LepIso::Count , -1);
+  gen_matched_bbar_beforeFSR.resize( LepID::Count * LepIso::Count , -1);
   gen_b_deltaR.resize( LepID::Count * LepIso::Count );
+  gen_b_beforeFSR_deltaR.resize( LepID::Count * LepIso::Count );
   gen_bbar_deltaR.resize( LepID::Count * LepIso::Count );
+  gen_bbar_beforeFSR_deltaR.resize( LepID::Count * LepIso::Count );
 
   if (!m_neutrinos_solver.get()) {
     const float topMass = event.isRealData() ? 173.34 : 172.5;
@@ -855,7 +859,7 @@ after_hlt_matching:
     if (event.isRealData())
         return;
 
-#define TT_GEN_DEBUG (false)
+#define TT_GEN_DEBUG (true)
 
     const GenParticlesProducer& gen_particles = producers.get<GenParticlesProducer>("gen_particles");
 
@@ -1216,10 +1220,14 @@ after_hlt_matching:
 
           float min_dr_b = MIN_DR_JETS;
           float min_dr_bbar = MIN_DR_JETS;
+          float min_dr_b_beforeFSR = MIN_DR_JETS;
+          float min_dr_bbar_beforeFSR = MIN_DR_JETS;
           size_t jet_index = 0;
 
           int16_t local_gen_matched_b = -1;
           int16_t local_gen_matched_bbar = -1;
+          int16_t local_gen_matched_b_beforeFSR = -1;
+          int16_t local_gen_matched_bbar_beforeFSR = -1;
           for (auto& jet: selJets_selID_DRCut[IdWP]) {
               float dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_b], jets.p4[jet]);
               if (dr < min_dr_b) {
@@ -1228,6 +1236,13 @@ after_hlt_matching:
               }
               gen_b_deltaR[IdWP].push_back(dr);
 
+              dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_b_beforeFSR], jets.p4[jet]);
+              if (dr < min_dr_b_beforeFSR) {
+                  min_dr_b_beforeFSR = dr;
+                  local_gen_matched_b_beforeFSR = jet_index;
+              }
+              gen_b_beforeFSR_deltaR[IdWP].push_back(dr);
+
               dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_bbar], jets.p4[jet]);
               if (dr < min_dr_bbar) {
                   min_dr_bbar = dr;
@@ -1235,11 +1250,20 @@ after_hlt_matching:
               }
               gen_bbar_deltaR[IdWP].push_back(dr);
 
+              dr = VectorUtil::DeltaR(gen_particles.pruned_p4[gen_bbar_beforeFSR], jets.p4[jet]);
+              if (dr < min_dr_bbar_beforeFSR) {
+                  min_dr_bbar_beforeFSR = dr;
+                  local_gen_matched_bbar_beforeFSR = jet_index;
+              }
+              gen_bbar_beforeFSR_deltaR[IdWP].push_back(dr);
+
               jet_index++;
           }
 
           gen_matched_b[IdWP] = local_gen_matched_b;
           gen_matched_bbar[IdWP] = local_gen_matched_bbar;
+          gen_matched_b_beforeFSR[IdWP] = local_gen_matched_b_beforeFSR;
+          gen_matched_bbar_beforeFSR[IdWP] = local_gen_matched_bbar_beforeFSR;
       }
     }
 

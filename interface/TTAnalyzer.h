@@ -143,12 +143,20 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(gen_b_deltaR, std::vector<std::vector<float>>); // DeltaR between the gen b coming from the top decay and each selected jets. Indexed as `selectedJets_tightID_DRcut` array
         BRANCH(gen_bbar_deltaR, std::vector<std::vector<float>>); // DeltaR between the gen bbar coming from the anti-top decay chain and each selected jets. Indexed as `selectedJets_tightID_DRcut` array
 
+        // These two vectors are indexed wrt LepLepId enum
+        BRANCH(gen_b_beforeFSR_deltaR, std::vector<std::vector<float>>); // DeltaR between the gen b coming from the top decay and each selected jets. Indexed as `selectedJets_tightID_DRcut` array
+        BRANCH(gen_bbar_beforeFSR_deltaR, std::vector<std::vector<float>>); // DeltaR between the gen bbar coming from the anti-top decay chain and each selected jets. Indexed as `selectedJets_tightID_DRcut` array
+
         BRANCH(gen_lepton_t_deltaR, std::vector<float>); // DeltaR between the gen lepton coming from the top decay chain and each selected lepton. Indexed as `leptons` array
         BRANCH(gen_lepton_tbar_deltaR, std::vector<float>); // DeltaR between the gen lepton coming from the anti-top decay chain and each selected lepton. Indexed as `leptons` array
 
         // These two vectors are indexed wrt LepLepId enum
         BRANCH(gen_matched_b, std::vector<int8_t>); // Index inside the `selectedJets_tightID_DRcut` collection of the jet with the smallest deltaR with the gen b coming from the top decay
         BRANCH(gen_matched_bbar, std::vector<int8_t>); // Index inside the `selectedJets_tightID_DRcut` collection of the jet with the smallest deltaR with the gen bbar coming from the anti-top decay
+
+        // These two vectors are indexed wrt LepLepId enum
+        BRANCH(gen_matched_b_beforeFSR, std::vector<int8_t>); // Index inside the `selectedJets_tightID_DRcut` collection of the jet with the smallest deltaR with the gen b coming from the top decay
+        BRANCH(gen_matched_bbar_beforeFSR, std::vector<int8_t>); // Index inside the `selectedJets_tightID_DRcut` collection of the jet with the smallest deltaR with the gen bbar coming from the anti-top decay
 
         BRANCH(gen_matched_lepton_t, char); // Index inside the `leptons` collection of the lepton with the smallest deltaR with the gen lepton coming from the top decay chain
         BRANCH(gen_matched_lepton_tbar, char); // Index inside the `leptons` collection of the lepton with the smallest deltaR with the gen lepton coming from the anti-top decay chain
