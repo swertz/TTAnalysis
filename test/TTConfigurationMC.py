@@ -3,7 +3,10 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
 from cp3_llbb.Framework import Framework
 
-framework = Framework.Framework(False, eras.Run2_25ns, globalTag='74X_mcRun2_asymptotic_v2')
+globalTag_ = '76X_mcRun2_asymptotic_RunIIFall15DR76_v1'
+processName_ = 'PAT'
+
+framework = Framework.Framework(False, eras.Run2_25ns, globalTag=globalTag_, processName=processName_)
 
 framework.addAnalyzer('tt', cms.PSet(
         type = cms.string('tt_analyzer'),
@@ -24,8 +27,8 @@ framework.addAnalyzer('tt', cms.PSet(
             
             muonPtCut = cms.untracked.double(20),
             muonEtaCut = cms.untracked.double(2.4),
-            muonLooseIsoCut = cms.untracked.double(.20), # Loose cut recommended for dilepton analysis
-            muonTightIsoCut = cms.untracked.double(.12),
+            muonLooseIsoCut = cms.untracked.double(.25), # Loose cut recommended for dilepton analysis
+            muonTightIsoCut = cms.untracked.double(.15),
 
             jetPtCut = cms.untracked.double(30),
             jetEtaCut = cms.untracked.double(2.5),
@@ -33,9 +36,9 @@ framework.addAnalyzer('tt', cms.PSet(
             jetDRleptonCut = cms.untracked.double(0.3),
             jetID = cms.untracked.string('loose'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
             jetCSVv2Name = cms.untracked.string('pfCombinedInclusiveSecondaryVertexV2BJetTags'),
-            jetCSVv2L = cms.untracked.double(0.605),
-            jetCSVv2M = cms.untracked.double(0.89),
-            jetCSVv2T = cms.untracked.double(0.97),
+            jetCSVv2L = cms.untracked.double(0.460),
+            jetCSVv2M = cms.untracked.double(0.8),
+            jetCSVv2T = cms.untracked.double(0.935),
 
             hltDRCut = cms.untracked.double(0.3), # DeltaR cut for trigger matching
             hltDPtCut = cms.untracked.double(0.5), #Delta(Pt)/Pt cut for trigger matching
@@ -54,32 +57,14 @@ framework.addAnalyzer('tt', cms.PSet(
 
 framework.removeProducer('fat_jets')
 
-#framework.doSystematics(['jec', 'jer'])
+framework.redoJEC()
+framework.smearJets()
+framework.doSystematics(['jec', 'jer'])
 
 process = framework.create()
 
-#process.source.firstEvent = cms.untracked.uint32(13083444)
-#process.source.firstLuminosityBlock = cms.untracked.uint32(52386)
-
-# Tricky gen event from /store/mc/RunIISpring15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/00000/0014DC94-DC5C-E511-82FB-7845C4FC39F5.root
-# First one is g g -> t tbar with one W -> bbar c
-# Second is b bar -> t tbar semi-leptonic
-#process.source.eventsToProcess = cms.untracked.VEventRange(
-        #'1:52386:13083444',
-        #'1:34020:8496854'
-        #)
-
-# Other tricky gen events, with lots of ISR
-# From file:/nfs/scratch/fynu/swertz/CMSSW_7_4_15/src/cp3_llbb/TTAnalysis/test/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_miniAODv2_oneFile.root
-#process.source.eventsToProcess = cms.untracked.VEventRange(
-        #'1:321521:80300260',
-        #'1:357590:89308562',
-        #'1:387992:96901374'
-        #)
-#process.MessageLogger.cerr.FwkReport.reportEvery = 1
-
 process.source.fileNames = cms.untracked.vstring(
-        'file:/nfs/scratch/fynu/swertz/CMSSW_7_4_15/src/cp3_llbb/TTAnalysis/test/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_miniAODv2_oneFile.root'
-        )
+    '/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-amcatnlo-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/04D51FB4-B2B8-E511-A399-047D7B881D6A.root'
+    )
 
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))

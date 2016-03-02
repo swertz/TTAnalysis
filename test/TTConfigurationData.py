@@ -3,7 +3,11 @@ import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
 from cp3_llbb.Framework import Framework
 
-framework = Framework.Framework(True, eras.Run2_25ns, globalTag='74X_dataRun2_v2', processName='RECO')
+globalTag_ = '76X_dataRun2_16Dec2015_v0'
+processName_ = 'RECO'
+
+framework = Framework.Framework(True, eras.Run2_25ns, globalTag=globalTag_, processName=processName_)
+
 framework.addAnalyzer('tt', cms.PSet(
         type = cms.string('tt_analyzer'),
         prefix = cms.string('tt_'),
@@ -23,8 +27,8 @@ framework.addAnalyzer('tt', cms.PSet(
             
             muonPtCut = cms.untracked.double(20),
             muonEtaCut = cms.untracked.double(2.4),
-            muonLooseIsoCut = cms.untracked.double(.20), # Loose cut recommended for dilepton analysis
-            muonTightIsoCut = cms.untracked.double(.12),
+            muonLooseIsoCut = cms.untracked.double(.25), # Loose cut recommended for dilepton analysis
+            muonTightIsoCut = cms.untracked.double(.15),
 
             jetPtCut = cms.untracked.double(30),
             jetEtaCut = cms.untracked.double(2.5),
@@ -32,9 +36,9 @@ framework.addAnalyzer('tt', cms.PSet(
             jetDRleptonCut = cms.untracked.double(0.3),
             jetID = cms.untracked.string('loose'), # not tightLeptonVeto since DeltaR(l,j) cut should be enough
             jetCSVv2Name = cms.untracked.string('pfCombinedInclusiveSecondaryVertexV2BJetTags'),
-            jetCSVv2L = cms.untracked.double(0.605),
-            jetCSVv2M = cms.untracked.double(0.89),
-            jetCSVv2T = cms.untracked.double(0.97),
+            jetCSVv2L = cms.untracked.double(0.460),
+            jetCSVv2M = cms.untracked.double(0.8),
+            jetCSVv2T = cms.untracked.double(0.935),
 
             hltDRCut = cms.untracked.double(0.3), # DeltaR cut for trigger matching
             hltDPtCut = cms.untracked.double(0.5), #Delta(Pt)/Pt cut for trigger matching
@@ -53,10 +57,14 @@ framework.addAnalyzer('tt', cms.PSet(
 
 framework.removeProducer('fat_jets')
 
+framework.redoJEC()
+framework.smearJets()
+framework.doSystematics(['jec', 'jer'])
+
 process = framework.create()
 
 process.source.fileNames = cms.untracked.vstring(
-        '/store/data/Run2015B/DoubleMuon/MINIAOD/05Oct2015-v1/40000/F6B9EFF5-BE6E-E511-A5DD-002618943964.root'
-        )
+    '/store/data/Run2015D/DoubleMuon/MINIAOD/16Dec2015-v1/10000/00039A2E-D7A7-E511-98EE-3417EBE64696.root'
+    )
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
