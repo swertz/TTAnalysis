@@ -859,7 +859,7 @@ after_hlt_matching:
     if (event.isRealData())
         return;
 
-#define TT_GEN_DEBUG (true)
+#define TT_GEN_DEBUG (false)
 
     const GenParticlesProducer& gen_particles = producers.get<GenParticlesProducer>("gen_particles");
 
