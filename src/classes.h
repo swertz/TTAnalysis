@@ -25,5 +25,7 @@ namespace TTAnalysis {
     std::vector<TTAnalysis::TTBar> dummy19;
     std::vector<std::vector<TTAnalysis::TTBar>> dummy20;
     std::vector<std::vector<std::vector<TTAnalysis::TTBar>>> dummy21;
+    TTAnalysis::GenParticle dummy22;
+    std::vector<TTAnalysis::GenParticle> dummy23;
   };
 }

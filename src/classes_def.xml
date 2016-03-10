@@ -28,5 +28,7 @@
   <class name="std::vector<TTAnalysis::TTBar>"/>
   <class name="std::vector<std::vector<TTAnalysis::TTBar>>"/>
   <class name="std::vector<std::vector<std::vector<TTAnalysis::TTBar>>>"/>
+  <class name="TTAnalysis::GenParticle"/>
+  <class name="std::vector<TTAnalysis::GenParticle>"/>
 </lcgdict>
 
