@@ -27,6 +27,12 @@ namespace TTAnalysis {
     myLorentzVector p4;
   };
 
+  struct GenParticle: BaseObject {
+    GenParticle() {}
+    GenParticle(myLorentzVector p4, int16_t pdg_id): BaseObject(p4), pdg_id(pdg_id) {}
+    int16_t pdg_id;
+  };
+
   struct Lepton: BaseObject {
     Lepton():
       ID(LepID::Count, false),

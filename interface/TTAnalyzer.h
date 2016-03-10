@@ -94,40 +94,41 @@ class TTAnalyzer: public Framework::Analyzer {
         
         BRANCH(ttbar, std::vector<std::vector<std::vector<TTAnalysis::TTBar>>>);
 
-        // Gen matching. All indexes are from the `pruned` collection
-        BRANCH(gen_t, uint16_t); // Index of the top quark
-        BRANCH(gen_t_beforeFSR, uint16_t); // Index of the top quark, before any FSR
-        BRANCH(gen_tbar, uint16_t); // Index of the anti-top quark
-        BRANCH(gen_tbar_beforeFSR, uint16_t); // Index of the anti-top quark, before any FSR
+        // Gen matching. All indexes are from the `genParticles` collection
+        BRANCH(genParticles, std::vector<TTAnalysis::GenParticle>);
+        BRANCH(gen_t, int16_t); // Index of the top quark
+        BRANCH(gen_t_beforeFSR, int16_t); // Index of the top quark, before any FSR
+        BRANCH(gen_tbar, int16_t); // Index of the anti-top quark
+        BRANCH(gen_tbar_beforeFSR, int16_t); // Index of the anti-top quark, before any FSR
         BRANCH(gen_t_tbar_deltaR, float); // DeltaR between the top and the anti-top quark
         BRANCH(gen_t_tbar_deltaEta, float); // DeltaEta between the top and the anti-top quark
         BRANCH(gen_t_tbar_deltaPhi, float); // DeltaPhi between the top and the anti-top quark
 
-        BRANCH(gen_b, uint16_t); // Index of the b quark coming from the top decay
-        BRANCH(gen_b_beforeFSR, uint16_t); // Index of the b quark coming from the top decay, before any FSR
-        BRANCH(gen_bbar, uint16_t); // Index of the anti-b quark coming from the anti-top decay
-        BRANCH(gen_bbar_beforeFSR, uint16_t); // Index of the anti-b quark coming from the anti-top decay, before any FSR
+        BRANCH(gen_b, int16_t); // Index of the b quark coming from the top decay
+        BRANCH(gen_b_beforeFSR, int16_t); // Index of the b quark coming from the top decay, before any FSR
+        BRANCH(gen_bbar, int16_t); // Index of the anti-b quark coming from the anti-top decay
+        BRANCH(gen_bbar_beforeFSR, int16_t); // Index of the anti-b quark coming from the anti-top decay, before any FSR
         BRANCH(gen_b_bbar_deltaR, float); // DeltaR between the b and the anti-b quark
 
-        BRANCH(gen_jet1_t, uint16_t); // Index of the first jet from the top decay chain
-        BRANCH(gen_jet1_t_beforeFSR, uint16_t); // Index of the first jet from the top decay chain, before any FSR
-        BRANCH(gen_jet2_t, uint16_t); // Index of the second jet from the top decay chain
-        BRANCH(gen_jet2_t_beforeFSR, uint16_t); // Index of the second jet from the top decay chain, before any FSR
+        BRANCH(gen_jet1_t, int16_t); // Index of the first jet from the top decay chain
+        BRANCH(gen_jet1_t_beforeFSR, int16_t); // Index of the first jet from the top decay chain, before any FSR
+        BRANCH(gen_jet2_t, int16_t); // Index of the second jet from the top decay chain
+        BRANCH(gen_jet2_t_beforeFSR, int16_t); // Index of the second jet from the top decay chain, before any FSR
 
-        BRANCH(gen_jet1_tbar, uint16_t); // Index of the first jet from the anti-top decay chain
-        BRANCH(gen_jet1_tbar_beforeFSR, uint16_t); // Index of the first jet from the anti-top decay chain, before any FSR
-        BRANCH(gen_jet2_tbar, uint16_t); // Index of the second jet from the anti-top decay chain
-        BRANCH(gen_jet2_tbar_beforeFSR, uint16_t); // Index of the second jet from the anti-top decay chain, before any FSR
+        BRANCH(gen_jet1_tbar, int16_t); // Index of the first jet from the anti-top decay chain
+        BRANCH(gen_jet1_tbar_beforeFSR, int16_t); // Index of the first jet from the anti-top decay chain, before any FSR
+        BRANCH(gen_jet2_tbar, int16_t); // Index of the second jet from the anti-top decay chain
+        BRANCH(gen_jet2_tbar_beforeFSR, int16_t); // Index of the second jet from the anti-top decay chain, before any FSR
 
-        BRANCH(gen_lepton_t, uint16_t); // Index of the lepton from the top decay chain
-        BRANCH(gen_lepton_t_beforeFSR, uint16_t); // Index of the lepton from the top decay chain, before any FSR
-        BRANCH(gen_neutrino_t, uint16_t); // Index of the neutrino from the top decay chain
-        BRANCH(gen_neutrino_t_beforeFSR, uint16_t); // Index of the neutrino from the top decay chain, before any FSR
+        BRANCH(gen_lepton_t, int16_t); // Index of the lepton from the top decay chain
+        BRANCH(gen_lepton_t_beforeFSR, int16_t); // Index of the lepton from the top decay chain, before any FSR
+        BRANCH(gen_neutrino_t, int16_t); // Index of the neutrino from the top decay chain
+        BRANCH(gen_neutrino_t_beforeFSR, int16_t); // Index of the neutrino from the top decay chain, before any FSR
 
-        BRANCH(gen_lepton_tbar, uint16_t); // Index of the lepton from the anti-top decay chain
-        BRANCH(gen_lepton_tbar_beforeFSR, uint16_t); // Index of the lepton from the anti-top decay chain, before any FSR
-        BRANCH(gen_neutrino_tbar, uint16_t); // Index of the neutrino from the anti-top decay chain
-        BRANCH(gen_neutrino_tbar_beforeFSR, uint16_t); // Index of the neutrino from the anti-top decay chain, before any FSR
+        BRANCH(gen_lepton_tbar, int16_t); // Index of the lepton from the anti-top decay chain
+        BRANCH(gen_lepton_tbar_beforeFSR, int16_t); // Index of the lepton from the anti-top decay chain, before any FSR
+        BRANCH(gen_neutrino_tbar, int16_t); // Index of the neutrino from the anti-top decay chain
+        BRANCH(gen_neutrino_tbar_beforeFSR, int16_t); // Index of the neutrino from the anti-top decay chain, before any FSR
 
         BRANCH(gen_ttbar_decay_type, char); // Type of ttbar decay. Can take any values from TTDecayType enum
 
@@ -158,8 +159,8 @@ class TTAnalyzer: public Framework::Analyzer {
         BRANCH(gen_matched_b_beforeFSR, std::vector<int8_t>); // Index inside the `selectedJets_tightID_DRcut` collection of the jet with the smallest deltaR with the gen b coming from the top decay
         BRANCH(gen_matched_bbar_beforeFSR, std::vector<int8_t>); // Index inside the `selectedJets_tightID_DRcut` collection of the jet with the smallest deltaR with the gen bbar coming from the anti-top decay
 
-        BRANCH(gen_matched_lepton_t, char); // Index inside the `leptons` collection of the lepton with the smallest deltaR with the gen lepton coming from the top decay chain
-        BRANCH(gen_matched_lepton_tbar, char); // Index inside the `leptons` collection of the lepton with the smallest deltaR with the gen lepton coming from the anti-top decay chain
+        BRANCH(gen_matched_lepton_t, int16_t); // Index inside the `leptons` collection of the lepton with the smallest deltaR with the gen lepton coming from the top decay chain
+        BRANCH(gen_matched_lepton_tbar, int16_t); // Index inside the `leptons` collection of the lepton with the smallest deltaR with the gen lepton coming from the anti-top decay chain
 
     private:
 
