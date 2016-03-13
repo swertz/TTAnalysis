@@ -29,8 +29,10 @@ namespace TTAnalysis {
 
   struct GenParticle: BaseObject {
     GenParticle() {}
-    GenParticle(myLorentzVector p4, int16_t pdg_id): BaseObject(p4), pdg_id(pdg_id) {}
+    GenParticle(myLorentzVector p4, int16_t pdg_id, int32_t pruned_idx): BaseObject(p4), pdg_id(pdg_id), pruned_idx(pruned_idx) {}
     int16_t pdg_id;
+    // This will be used to check the decay chains of the particles, and not stored in the tree
+    int32_t pruned_idx;
   };
 
   struct Lepton: BaseObject {

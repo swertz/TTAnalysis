@@ -899,12 +899,12 @@ after_hlt_matching:
 
 #define FILL_GEN_COLL( X ) \
     if (flags.isLastCopy()) { \
-        genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id) ); \
+        genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
         gen_##X = gen_index; \
         gen_index++; \
     } \
     if (flags.isFirstCopy()) { \
-        genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id) ); \
+        genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
         gen_##X##_beforeFSR = gen_index; \
         gen_index++; \
     }
@@ -912,24 +912,24 @@ after_hlt_matching:
 // Assign index to X if it's empty, or Y if not
 #define FILL_GEN_COLL2(X, Y, ERROR) \
     if (flags.isLastCopy()) { \
-        if (gen_##X == 0){ \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id) ); \
+        if (gen_##X == -1){ \
+            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
             gen_##X = gen_index; \
             gen_index++; \
-        } else if (gen_##Y == 0) { \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id) ); \
+        } else if (gen_##Y == -1) { \
+            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
             gen_##Y = gen_index; \
             gen_index++; \
         } else \
             std::cout << ERROR << std::endl; \
     } \
     if (flags.isFirstCopy()) { \
-        if (gen_##X##_beforeFSR == 0) { \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id) ); \
+        if (gen_##X##_beforeFSR == -1) { \
+            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
             gen_##X##_beforeFSR = gen_index; \
             gen_index++; \
-        } else if (gen_##Y##_beforeFSR == 0) { \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id) ); \
+        } else if (gen_##Y##_beforeFSR == -1) { \
+            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
             gen_##Y##_beforeFSR = gen_index; \
             gen_index++; \
         } else \
@@ -1006,8 +1006,8 @@ after_hlt_matching:
             continue;
         }
 
-        bool from_t_decay = pruned_decays_from(i, gen_t);
-        bool from_tbar_decay = pruned_decays_from(i, gen_tbar);
+        bool from_t_decay = pruned_decays_from(i, genParticles[gen_t].pruned_idx);
+        bool from_tbar_decay = pruned_decays_from(i, genParticles[gen_tbar].pruned_idx);
 
         // Only keep particles coming from the tops decay
         if (! from_t_decay && ! from_tbar_decay)
@@ -1030,10 +1030,10 @@ after_hlt_matching:
                     std::cout << "A quark coming from W decay is a b" << std::endl;
 #endif
 
-                    if (! (gen_jet1_tbar_beforeFSR != -1 && pruned_decays_from(i, gen_jet1_tbar_beforeFSR)) &&
-                        ! (gen_jet2_tbar_beforeFSR != -1 && pruned_decays_from(i, gen_jet2_tbar_beforeFSR)) &&
-                        ! (gen_jet1_t_beforeFSR != -1 && pruned_decays_from(i, gen_jet1_t_beforeFSR)) &&
-                        ! (gen_jet2_t_beforeFSR != -1 && pruned_decays_from(i, gen_jet2_t_beforeFSR))) {
+                    if (! (gen_jet1_tbar_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet1_tbar_beforeFSR].pruned_idx)) &&
+                        ! (gen_jet2_tbar_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet2_tbar_beforeFSR].pruned_idx)) &&
+                        ! (gen_jet1_t_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet1_t_beforeFSR].pruned_idx)) &&
+                        ! (gen_jet2_t_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet2_t_beforeFSR].pruned_idx))) {
 #if TT_GEN_DEBUG
                         std::cout << "This after-FSR b quark is not coming from a W decay" << std::endl;
 #endif
@@ -1076,10 +1076,10 @@ after_hlt_matching:
                     std::cout << "A quark coming from W decay is a bbar" << std::endl;
 #endif
 
-                    if (! (gen_jet1_tbar_beforeFSR != -1 && pruned_decays_from(i, gen_jet1_tbar_beforeFSR)) &&
-                        ! (gen_jet2_tbar_beforeFSR != -1 && pruned_decays_from(i, gen_jet2_tbar_beforeFSR)) &&
-                        ! (gen_jet1_t_beforeFSR != -1 && pruned_decays_from(i, gen_jet1_t_beforeFSR)) &&
-                        ! (gen_jet2_t_beforeFSR != -1 && pruned_decays_from(i, gen_jet2_t_beforeFSR))) {
+                    if (! (gen_jet1_tbar_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet1_tbar_beforeFSR].pruned_idx)) &&
+                        ! (gen_jet2_tbar_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet2_tbar_beforeFSR].pruned_idx)) &&
+                        ! (gen_jet1_t_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet1_t_beforeFSR].pruned_idx)) &&
+                        ! (gen_jet2_t_beforeFSR != -1 && pruned_decays_from(i, genParticles[gen_jet2_t_beforeFSR].pruned_idx))) {
 #if TT_GEN_DEBUG
                         std::cout << "This after-fsr b anti-quark is not coming from a W decay" << std::endl;
 #endif
