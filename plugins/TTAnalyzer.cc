@@ -1,3 +1,4 @@
+#include <cp3_llbb/TTAnalysis/interface/Defines.h>
 #include <cp3_llbb/TTAnalysis/interface/Types.h>
 #include <cp3_llbb/TTAnalysis/interface/Tools.h>
 #include <cp3_llbb/TTAnalysis/interface/GenStatusFlags.h>
@@ -14,8 +15,6 @@
 #include <Math/PtEtaPhiE4D.h>
 #include <Math/LorentzVector.h>
 #include <Math/VectorUtil.h>
-
-//#define _TT_DEBUG_
 
 // To access VectorUtil::DeltaR() more easily
 using namespace ROOT::Math;
@@ -659,8 +658,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     std::cout << "Reconstructing mtt" << std::endl;
   #endif
 
-#define TT_MTT_DEBUG false
-
 #if TT_MTT_DEBUG
   std::cout << "Reconstructing ttbar system" << std::endl;
 #endif
@@ -765,8 +762,6 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
   if (producers.exists("hlt")) {
 
-#define TT_HLT_DEBUG (false)
-
       const HLTProducer& hlt = producers.get<HLTProducer>("hlt");
 
       if (hlt.paths.empty()) {
@@ -859,8 +854,6 @@ after_hlt_matching:
     if (event.isRealData())
         return;
 
-#define TT_GEN_DEBUG (false)
-
     const GenParticlesProducer& gen_particles = producers.get<GenParticlesProducer>("gen_particles");
 
     // 'Pruned' particles are from the hard process
@@ -896,45 +889,6 @@ after_hlt_matching:
             print_mother_chain(index);
     };
 #endif
-
-#define FILL_GEN_COLL( X ) \
-    if (flags.isLastCopy()) { \
-        genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
-        gen_##X = gen_index; \
-        gen_index++; \
-    } \
-    if (flags.isFirstCopy()) { \
-        genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
-        gen_##X##_beforeFSR = gen_index; \
-        gen_index++; \
-    }
-
-// Assign index to X if it's empty, or Y if not
-#define FILL_GEN_COLL2(X, Y, ERROR) \
-    if (flags.isLastCopy()) { \
-        if (gen_##X == -1){ \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
-            gen_##X = gen_index; \
-            gen_index++; \
-        } else if (gen_##Y == -1) { \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
-            gen_##Y = gen_index; \
-            gen_index++; \
-        } else \
-            std::cout << ERROR << std::endl; \
-    } \
-    if (flags.isFirstCopy()) { \
-        if (gen_##X##_beforeFSR == -1) { \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
-            gen_##X##_beforeFSR = gen_index; \
-            gen_index++; \
-        } else if (gen_##Y##_beforeFSR == -1) { \
-            genParticles.push_back( GenParticle(gen_particles.pruned_p4[i], pdg_id, i) ); \
-            gen_##Y##_beforeFSR = gen_index; \
-            gen_index++; \
-        } else \
-            std::cout << ERROR << std::endl; \
-    }
 
     // We need to initialize everything to -1, since 0 is a valid entry in the tt_genParticles array
     gen_t = -1;
@@ -1021,10 +975,10 @@ after_hlt_matching:
                 // However, we can't rely on the presence of the W in the decay chain, as it may be generator specific
                 // Since it's the last copy (ie, after FSR), we can check if this B comes from the B assigned to the W decay (ie, gen_jet1_t_beforeFSR, gen_jet2_t_beforeFSR)
                 // If yes, then it's not the B coming directly from the top decay
-                if ((gen_jet1_t_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet1_t_beforeFSR]) == 5) ||
-                    (gen_jet2_t_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet2_t_beforeFSR]) == 5) ||
-                    (gen_jet1_tbar_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet1_tbar_beforeFSR]) == 5) ||
-                    (gen_jet2_tbar_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet2_tbar_beforeFSR]) == 5)) {
+                if ((gen_jet1_t_beforeFSR != -1 && std::abs(genParticles[gen_jet1_t_beforeFSR].pdg_id) == 5) ||
+                    (gen_jet2_t_beforeFSR != -1 && std::abs(genParticles[gen_jet2_t_beforeFSR].pdg_id) == 5) ||
+                    (gen_jet1_tbar_beforeFSR != -1 && std::abs(genParticles[gen_jet1_tbar_beforeFSR].pdg_id) == 5) ||
+                    (gen_jet2_tbar_beforeFSR != -1 && std::abs(genParticles[gen_jet2_tbar_beforeFSR].pdg_id) == 5)) {
 
 #if TT_GEN_DEBUG
                     std::cout << "A quark coming from W decay is a b" << std::endl;
@@ -1067,10 +1021,10 @@ after_hlt_matching:
                 // However, we can't rely on the presence of the W in the decay chain, as it may be generator specific
                 // Since it's the last copy (ie, after FSR), we can check if this B comes from the B assigned to the W decay (ie, gen_jet1_t_beforeFSR, gen_jet2_t_beforeFSR)
                 // If yes, then it's not the B coming directly from the top decay
-                if ((gen_jet1_t_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet1_t_beforeFSR]) == 5) ||
-                    (gen_jet2_t_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet2_t_beforeFSR]) == 5) ||
-                    (gen_jet1_tbar_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet1_tbar_beforeFSR]) == 5) ||
-                    (gen_jet2_tbar_beforeFSR != -1 && std::abs(gen_particles.pruned_pdg_id[gen_jet2_tbar_beforeFSR]) == 5)) {
+                if ((gen_jet1_t_beforeFSR != -1 && std::abs(genParticles[gen_jet1_t_beforeFSR].pdg_id) == 5) ||
+                    (gen_jet2_t_beforeFSR != -1 && std::abs(genParticles[gen_jet2_t_beforeFSR].pdg_id) == 5) ||
+                    (gen_jet1_tbar_beforeFSR != -1 && std::abs(genParticles[gen_jet1_tbar_beforeFSR].pdg_id) == 5) ||
+                    (gen_jet2_tbar_beforeFSR != -1 && std::abs(genParticles[gen_jet2_tbar_beforeFSR].pdg_id) == 5)) {
 
 #if TT_GEN_DEBUG
                     std::cout << "A quark coming from W decay is a bbar" << std::endl;
