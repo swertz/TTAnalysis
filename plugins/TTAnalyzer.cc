@@ -74,7 +74,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
     const float wMass = event.isRealData() ? 80.385 : 80.419002;
     // const float wWidth = event.isRealData() ? 2.085 : 2.04759951;
 
-    m_neutrinos_solver.reset(new NeutrinosSolver(topMass, wMass));
+    m_neutrinos_solver.reset(new NeutrinosSolver(topMass, topMass, wMass, wMass));
   }
 
   ///////////////////////////
