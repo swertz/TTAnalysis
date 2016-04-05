@@ -24,7 +24,8 @@ class TTAnalyzer: public Framework::Analyzer {
             m_met_producer(config.getParameter<std::string>("metProducer")),
             
             m_electronPtCut( config.getUntrackedParameter<double>("electronPtCut", 20) ),
-            m_electronEtaCut( config.getUntrackedParameter<double>("electronEtaCut", 2.5) ),
+            m_electronEtaCut( config.getUntrackedParameter<double>("electronEtaCut", 2.4) ),
+            m_electronRemoveGap( config.getUntrackedParameter<bool>("electronRemoveGap", true) ),
             m_electronVetoIDName( config.getUntrackedParameter<std::string>("electronVetoIDName") ),
             m_electronLooseIDName( config.getUntrackedParameter<std::string>("electronLooseIDName") ),
             m_electronMediumIDName( config.getUntrackedParameter<std::string>("electronMediumIDName") ),
@@ -36,9 +37,9 @@ class TTAnalyzer: public Framework::Analyzer {
             m_muonTightIsoCut( config.getUntrackedParameter<double>("muonTightIsoCut", 0.12) ),
             
             m_jetPtCut( config.getUntrackedParameter<double>("jetPtCut", 30) ),
-            m_jetEtaCut( config.getUntrackedParameter<double>("jetEtaCut", 2.5) ),
+            m_jetEtaCut( config.getUntrackedParameter<double>("jetEtaCut", 2.4) ),
             m_bJetEtaCut( config.getUntrackedParameter<double>("bJetEtaCut", 2.4) ),
-            m_jetPUID( config.getUntrackedParameter<double>("jetPUID", std::numeric_limits<float>::min()) ),
+            m_jetPUID( config.getUntrackedParameter<double>("jetPUID", std::numeric_limits<double>::min()) ),
             m_jetDRleptonCut( config.getUntrackedParameter<double>("jetDRleptonCut", 0.3) ),
             m_jetID( config.getUntrackedParameter<std::string>("jetID", "loose") ),
             m_jetCSVv2Name( config.getUntrackedParameter<std::string>("jetCSVv2Name", "pfCombinedInclusiveSecondaryVertexV2BJetTags") ),
@@ -46,8 +47,8 @@ class TTAnalyzer: public Framework::Analyzer {
             m_jetCSVv2M( config.getUntrackedParameter<double>("jetCSVv2M", 0.89) ),
             m_jetCSVv2T( config.getUntrackedParameter<double>("jetCSVv2T", 0.97) ),
             
-            m_hltDRCut( config.getUntrackedParameter<double>("hltDRCut", std::numeric_limits<float>::max()) ),
-            m_hltDPtCut( config.getUntrackedParameter<double>("hltDPtCut", std::numeric_limits<float>::max()) )
+            m_hltDRCut( config.getUntrackedParameter<double>("hltDRCut", std::numeric_limits<double>::max()) ),
+            m_hltDPtCut( config.getUntrackedParameter<double>("hltDPtCut", std::numeric_limits<double>::max()) )
         {
         }
 
@@ -171,6 +172,7 @@ class TTAnalyzer: public Framework::Analyzer {
         const std::string m_met_producer;
 
         const float m_electronPtCut, m_electronEtaCut;
+        const bool m_electronRemoveGap;
         const std::string m_electronVetoIDName;
         const std::string m_electronLooseIDName;
         const std::string m_electronMediumIDName;

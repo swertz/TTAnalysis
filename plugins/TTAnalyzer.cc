@@ -16,6 +16,9 @@
 #include <Math/LorentzVector.h>
 #include <Math/VectorUtil.h>
 
+#define ECAL_GAP_LOW 1.4442
+#define ECAL_GAP_HIGH 1.566
+
 // To access VectorUtil::DeltaR() more easily
 using namespace ROOT::Math;
 
@@ -67,14 +70,13 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   gen_bbar_deltaR.resize( LepID::Count * LepIso::Count );
   gen_bbar_beforeFSR_deltaR.resize( LepID::Count * LepIso::Count );
 
-  if (!m_neutrinos_solver.get()) {
-    const float topMass = event.isRealData() ? 173.34 : 172.5;
-    // const float topWidth = event.isRealData() ? 1.41 : 1.50833649;
-
-    const float wMass = event.isRealData() ? 80.385 : 80.419002;
+  const float topMass = event.isRealData() ? 173.34 : 172.5;
+  // const float topWidth = event.isRealData() ? 1.41 : 1.50833649;
+  const float wMass = event.isRealData() ? 80.385 : 80.419002;
     // const float wWidth = event.isRealData() ? 2.085 : 2.04759951;
 
-    m_neutrinos_solver.reset(new NeutrinosSolver(topMass, topMass, wMass, wMass));
+  if (!m_neutrinos_solver.get()) {
+    m_neutrinos_solver.reset(new NeutrinosSolver());
   }
 
   ///////////////////////////
@@ -88,6 +90,9 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
   const ElectronsProducer& electrons = producers.get<ElectronsProducer>(m_electrons_producer);
 
   for(uint16_t ielectron = 0; ielectron < electrons.p4.size(); ielectron++){
+    if( m_electronRemoveGap && std::abs(electrons.p4[ielectron].Eta()) > ECAL_GAP_LOW && std::abs(electrons.p4[ielectron].Eta()) < ECAL_GAP_HIGH )
+      continue;
+
     if( electrons.p4[ielectron].Pt() > m_electronPtCut && std::abs(electrons.p4[ielectron].Eta()) < m_electronEtaCut ){
       
       Lepton m_lepton(
@@ -694,7 +699,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
                 std::cout << "\t b-jet 2: " << bjet2_p4 << std::endl;
 #endif
 
-                auto sols = m_neutrinos_solver->getNeutrinos(lepton1_p4, lepton2_p4, bjet1_p4, bjet2_p4, met_p4);
+                auto sols = m_neutrinos_solver->getNeutrinos(lepton1_p4, lepton2_p4, bjet1_p4, bjet2_p4, met_p4, wMass, wMass, topMass, topMass);
 
 #if TT_MTT_DEBUG
                 std::cout << "Got " << sols.size() << " solutions for neutrinos" << std::endl;
@@ -718,7 +723,7 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
 
                 // Swap b-jets
                 std::swap(bjet1_p4, bjet2_p4);
-                sols = m_neutrinos_solver->getNeutrinos(lepton1_p4, lepton2_p4, bjet1_p4, bjet2_p4, met_p4);
+                sols = m_neutrinos_solver->getNeutrinos(lepton1_p4, lepton2_p4, bjet1_p4, bjet2_p4, met_p4, wMass, wMass, topMass, topMass);
 
 #if TT_MTT_DEBUG
                 std::cout << "Got " << sols.size() << " solutions for neutrinos" << std::endl;

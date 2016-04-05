@@ -14,8 +14,8 @@ class DileptonCategory: public Category {
     virtual void configure(const edm::ParameterSet& conf) override {
       m_MllCutSF = conf.getUntrackedParameter<double>("MllCutSF", 20);
       m_MllCutDF = conf.getUntrackedParameter<double>("MllCutDF", 20);
-      m_MllZVetoCutLow = conf.getUntrackedParameter<double>("MllZVetoCutLow", 86);
-      m_MllZVetoCutHigh = conf.getUntrackedParameter<double>("MllZVetoCutHigh", 116);
+      m_MllZVetoCutLow = conf.getUntrackedParameter<double>("MllZVetoCutLow", 76);
+      m_MllZVetoCutHigh = conf.getUntrackedParameter<double>("MllZVetoCutHigh", 106);
       m_HLTDoubleMuon = conf.getUntrackedParameter<std::vector<std::string>>("HLTDoubleMuon");
       m_HLTDoubleEG = conf.getUntrackedParameter<std::vector<std::string>>("HLTDoubleEG");
       m_HLTMuonEG = conf.getUntrackedParameter<std::vector<std::string>>("HLTMuonEG");
