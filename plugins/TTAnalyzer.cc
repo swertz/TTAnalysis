@@ -211,7 +211,15 @@ void TTAnalyzer::analyze(const edm::Event& event, const edm::EventSetup& setup, 
           m_diLepton.iso[idx] = l1.iso[iso1] && l2.iso[iso2];
         }
       }
-      
+
+      // Retrieve HLT SF
+      if(m_diLepton.isElEl && m_hltSF.find("DoubleEG") != m_hltSF.end()) 
+        m_diLepton.hlt_SF = m_hltSF["DoubleEG"].get( { std::abs(l1.p4.Eta()), std::abs(l2.p4.Eta()) } );
+      if((m_diLepton.isElMu || m_diLepton.isMuEl) && m_hltSF.find("MuonEG") != m_hltSF.end()) 
+        m_diLepton.hlt_SF = m_hltSF["MuonEG"].get( { std::abs(l1.p4.Eta()), std::abs(l2.p4.Eta()) } );
+      if(m_diLepton.isMuMu && m_hltSF.find("DoubleMuon") != m_hltSF.end()) 
+        m_diLepton.hlt_SF = m_hltSF["DoubleMuon"].get( { std::abs(l1.p4.Eta()), std::abs(l2.p4.Eta()) } );
+
       m_diLepton.DR = VectorUtil::DeltaR(l1.p4, l2.p4);
       m_diLepton.DEta = TTAnalysis::DeltaEta(l1.p4, l2.p4);
       m_diLepton.DPhi = VectorUtil::DeltaPhi(l1.p4, l2.p4);

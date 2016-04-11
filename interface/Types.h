@@ -89,7 +89,8 @@ namespace TTAnalysis {
   struct DiLepton: BaseObject {
     DiLepton():
       ID(LepID::Count*LepID::Count, false),
-      iso(LepIso::Count*LepIso::Count, false)
+      iso(LepIso::Count*LepIso::Count, false),
+      hlt_SF({1,1,1})
       {}
     
     std::pair<uint16_t, uint16_t> idxs; // stores indices to electron/muon arrays
@@ -100,6 +101,7 @@ namespace TTAnalysis {
     bool isSF; // same flavour
     std::vector<bool> ID; // combination of two lepton IDs
     std::vector<bool> iso; // combination of two lepton isolations
+    std::vector<float> hlt_SF; // scale factors for the corresponding trigger -> nominal/down/up
     float DR;
     float DEta;
     float DPhi;

@@ -44,6 +44,12 @@ framework.addAnalyzer('tt', cms.PSet(
 
             hltDRCut = cms.untracked.double(0.3), # DeltaR cut for trigger matching
             hltDPtCut = cms.untracked.double(0.5), #Delta(Pt)/Pt cut for trigger matching
+
+            hltScaleFactors = cms.untracked.PSet(
+                DoubleEG = cms.untracked.FileInPath('cp3_llbb/Framework/data/ScaleFactors/El17El12_SF.json'),
+                DoubleMuon = cms.untracked.FileInPath('cp3_llbb/Framework/data/ScaleFactors/Mu17Mu8_SF.json'),
+                #MuonEG = cms.untracked.FileInPath('cp3_llbb/Framework/data/ScaleFactors/')
+                )
             ),
         categories_parameters = cms.PSet(
             MllCutSF = cms.untracked.double(20),

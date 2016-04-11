@@ -8,6 +8,7 @@
 #include <cp3_llbb/Framework/interface/MuonsProducer.h>
 #include <cp3_llbb/Framework/interface/JetsProducer.h>
 #include <cp3_llbb/Framework/interface/Analyzer.h>
+#include <cp3_llbb/Framework/interface/BinnedValuesJSONParser.h>
 
 #include <cp3_llbb/TTAnalysis/interface/Types.h>
 #include <cp3_llbb/TTAnalysis/interface/Tools.h>
@@ -50,6 +51,14 @@ class TTAnalyzer: public Framework::Analyzer {
             m_hltDRCut( config.getUntrackedParameter<double>("hltDRCut", std::numeric_limits<double>::max()) ),
             m_hltDPtCut( config.getUntrackedParameter<double>("hltDPtCut", std::numeric_limits<double>::max()) )
         {
+          if(config.exists("hltScaleFactors")){
+            const edm::ParameterSet& hltSFPSet = config.getUntrackedParameter<edm::ParameterSet>("hltScaleFactors");
+            std::vector<std::string> hltSFNames = hltSFPSet.getParameterNames();
+            for(const std::string& sf: hltSFNames){
+              BinnedValuesJSONParser parser(hltSFPSet.getUntrackedParameter<edm::FileInPath>(sf).fullPath());
+              m_hltSF.emplace(sf, std::move(parser.get_values()));
+            }
+          }
         }
 
         virtual void analyze(const edm::Event&, const edm::EventSetup&, const ProducersManager&, const AnalyzersManager&, const CategoryManager&) override;
@@ -180,6 +189,7 @@ class TTAnalyzer: public Framework::Analyzer {
         const float m_jetCSVv2L, m_jetCSVv2M, m_jetCSVv2T;
 
         const float m_hltDRCut, m_hltDPtCut;
+        std::map<std::string, BinnedValues> m_hltSF;
 
         std::shared_ptr<NeutrinosSolver> m_neutrinos_solver;
 
